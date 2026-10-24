@@ -1,0 +1,17 @@
+[
+ {"title":"CS50's Introduction to Programming with Python","topic":"python","level":"beginner","cost":"free","provider":"Harvard / edX","url":"https://cs50.harvard.edu/python/","note":"Free to study; certificate is paid."},
+ {"title":"Python Official Tutorial","topic":"python","level":"beginner","cost":"free","provider":"python.org","url":"https://docs.python.org/3/tutorial/","note":"Official documentation."},
+ {"title":"freeCodeCamp: Scientific Computing with Python","topic":"python","level":"beginner","cost":"free","provider":"freeCodeCamp","url":"https://www.freecodecamp.org/learn/scientific-computing-with-python/","note":"Free certification."},
+ {"title":"Kaggle Learn: Python, Pandas, Intro to ML","topic":"machine learning","level":"beginner","cost":"free","provider":"Kaggle","url":"https://www.kaggle.com/learn","note":"Short hands-on micro-courses with free certificates."},
+ {"title":"Google Machine Learning Crash Course","topic":"machine learning","level":"beginner","cost":"free","provider":"Google","url":"https://developers.google.com/machine-learning/crash-course","note":"Free."},
+ {"title":"Machine Learning Specialization","topic":"machine learning","level":"intermediate","cost":"free to audit","provider":"DeepLearning.AI / Coursera","url":"https://www.coursera.org/specializations/machine-learning-introduction","note":"Audit for free; certificate and graded work are paid. Check financial aid."},
+ {"title":"Practical Deep Learning for Coders","topic":"artificial intelligence","level":"intermediate","cost":"free","provider":"fast.ai","url":"https://course.fast.ai/","note":"Free."},
+ {"title":"NPTEL Courses","topic":"artificial intelligence","level":"all","cost":"free","provider":"IIT / IISc","url":"https://nptel.ac.in/","note":"Free lectures; proctored certificate exam has a fee."},
+ {"title":"SWAYAM","topic":"general","level":"all","cost":"free","provider":"Govt. of India","url":"https://swayam.gov.in/","note":"Free courses; exam certificate has a fee."},
+ {"title":"MDN Learn Web Development","topic":"web development","level":"beginner","cost":"free","provider":"Mozilla","url":"https://developer.mozilla.org/en-US/docs/Learn_web_development","note":"Free."},
+ {"title":"The Odin Project","topic":"web development","level":"beginner","cost":"free","provider":"The Odin Project","url":"https://www.theodinproject.com/","note":"Free full-stack path."},
+ {"title":"CS50x: Introduction to Computer Science","topic":"data structures","level":"beginner","cost":"free","provider":"Harvard / edX","url":"https://cs50.harvard.edu/x/","note":"Covers data structures and algorithms basics."},
+ {"title":"NeetCode Roadmap","topic":"data structures","level":"intermediate","cost":"free","provider":"NeetCode","url":"https://neetcode.io/roadmap","note":"Practice-focused roadmap."},
+ {"title":"Arduino Documentation & Tutorials","topic":"internet of things","level":"beginner","cost":"free","provider":"Arduino","url":"https://docs.arduino.cc/learn/","note":"Free."},
+ {"title":"pandas: Getting Started","topic":"data science","level":"beginner","cost":"free","provider":"pandas","url":"https://pandas.pydata.org/docs/getting_started/","note":"Official."}
+]
