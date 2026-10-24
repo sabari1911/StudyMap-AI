@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>StudyFlow AI</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;600;700&display=swap">
+<style>
+:root{--bg:#f2f6fb;--ink:#14213d;--muted:#51607a;--line:#d5deea;--card:#fff;--teal:#0b8a7a;--amber:#f2a33a;--r:10px}
+@media (prefers-color-scheme:dark){:root{--bg:#0e1626;--ink:#e8eef8;--muted:#9fb0c9;--line:#26354f;--card:#162239;--teal:#34c3b0;--amber:#f2a33a}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 Lexend,system-ui,sans-serif}
+header{padding:28px 20px 8px;max-width:960px;margin:auto}
+h1{margin:0;font-size:2rem;letter-spacing:-.02em}
+header p{margin:.3rem 0 0;color:var(--muted);max-width:60ch}
+nav{display:flex;gap:6px;flex-wrap:wrap;max-width:960px;margin:16px auto 0;padding:0 20px}
+nav button{border:1px solid var(--line);background:var(--card);color:var(--ink);padding:8px 14px;border-radius:var(--r);font:inherit;cursor:pointer}
+nav button[aria-selected=true]{background:var(--teal);color:#fff;border-color:var(--teal)}
+main{max-width:960px;margin:16px auto 60px;padding:0 20px}
+section{display:none;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:20px}
+section.on{display:block}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+input,select,textarea{font:inherit;padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
+textarea{width:100%;min-height:90px}
+.go{background:var(--amber);color:#14213d;border:0;padding:9px 18px;border-radius:8px;font:inherit;font-weight:600;cursor:pointer}
+:focus-visible{outline:3px solid var(--teal);outline-offset:2px}
+.item{border-top:1px solid var(--line);padding:12px 0}
+.item a{color:var(--teal);font-weight:600}
+.tag{font-size:.8rem;color:var(--muted)}
+.empty{color:var(--muted)}
+pre{white-space:pre-wrap;font:inherit;background:var(--bg);padding:14px;border-radius:8px}
+label.t{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-top:1px solid var(--line)}
+progress{width:100%;accent-color:var(--teal)}
+</style>
+</head>
+<body>
+<header>
+  <h1>StudyFlow AI</h1>
+  <p>Find free courses, plan your study days, ask a tutor in Tamil or English, and see where to go next.</p>
+</header>
+<nav role="tablist" id="tabs"></nav>
+<main>
+ <section id="resources"><div class="row">
+   <input id="rq" placeholder="Topic, e.g. python" aria-label="Topic">
+   <label><input type="checkbox" id="free" checked> Free only</label>
+   <button class="go" onclick="findRes()">Find resources</button></div><div id="rout"></div></section>
+ <section id="planner"><div class="row">
+   <input id="ptopic" value="Python" aria-label="Topic">
+   <input id="pdays" type="number" value="30" min="1" max="180" aria-label="Days">
+   <input id="phours" type="number" value="2" min="0.5" max="12" step="0.5" aria-label="Hours per day">
+   <button class="go" onclick="makePlan()">Create plan</button></div>
+   <progress id="prog" value="0" max="1" hidden></progress><div id="pout"><p class="empty">Enter a topic and days to create a plan. Tick tasks as you finish them.</p></div></section>
+ <section id="tutor"><div class="row">
+   <select id="lang" aria-label="Language"><option>English</option><option>Tamil</option><option>Hindi</option><option>Telugu</option><option>Malayalam</option></select></div>
+   <textarea id="q" placeholder="Explain Python inheritance with a simple example"></textarea>
+   <div class="row" style="margin-top:10px"><button class="go" onclick="ask()">Ask</button></div><pre id="aout" hidden></pre></section>
+ <section id="internships"><div class="row">
+   <input id="dom" value="python" aria-label="Domain"><button class="go" onclick="interns()">Find internships</button></div><div id="iout"></div></section>
+ <section id="nearby"><div class="row">
+   <input id="loc" placeholder="Your town or city" aria-label="Location">
+   <select id="kind" aria-label="Type"><option value="library">Library</option><option value="computer training institute">Computer training</option><option value="coding institute">Coding institute</option><option value="community learning centre">Community centre</option></select>
+   <button class="go" onclick="near()">Search map</button></div><div id="nout"></div></section>
+ <section id="roadmap"><div class="row">
+   <select id="goal" aria-label="Career goal"></select><button class="go" onclick="road()">Show roadmap</button></div><div id="rmout"></div></section>
+</main>
+<script>
+const $=id=>document.getElementById(id), API=location.origin.startsWith("http")?"":"http://localhost:5000";
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const tabs=[["resources","Free courses"],["planner","Study planner"],["tutor","AI tutor"],["internships","Internships"],["nearby","Nearby"],["roadmap","Career roadmap"]];
+$("tabs").innerHTML=tabs.map(([id,l],i)=>`<button role="tab" aria-selected="${i==0}" data-t="${id}">${l}</button>`).join("");
+$("tabs").onclick=e=>{const t=e.target.dataset.t;if(!t)return;
+ document.querySelectorAll("nav button").forEach(b=>b.setAttribute("aria-selected",b.dataset.t==t));
+ document.querySelectorAll("section").forEach(s=>s.classList.toggle("on",s.id==t))};
+$("resources").classList.add("on");
+const j=async(u,o)=>{const r=await fetch(API+u,o);return r.json()};
+async function findRes(){const d=await j(`/api/resources?q=${encodeURIComponent($("rq").value)}&free=${$("free").checked?1:0}`);
+ $("rout").innerHTML=d.length?d.map(r=>`<div class="item"><a href="${esc(r.url)}" target="_blank" rel="noopener">${esc(r.title)}</a>
+ <div class="tag">${esc(r.provider)} · ${esc(r.level)} · ${esc(r.cost)}</div><div>${esc(r.note)}</div></div>`).join(""):'<p class="empty">No match. Try "python", "machine learning" or "web development".</p>'}
+async function makePlan(){const d=await j("/api/plan",{method:"POST",headers:{"Content-Type":"application/json"},
+ body:JSON.stringify({topic:$("ptopic").value,days:+$("pdays").value,hours_per_day:+$("phours").value})});
+ const key="sf:"+d.topic.toLowerCase()+d.total_days, done=JSON.parse(localStorage.getItem(key)||"[]");
+ $("pout").innerHTML=`<p>${esc(d.topic)} · ${d.total_days} days · ${d.hours_per_day} h/day</p>`+d.phases.map((p,i)=>
+ `<label class="t"><input type="checkbox" data-i="${i}" ${done.includes(i)?"checked":""}><span><b>Days ${p.days}</b><br>${esc(p.goal)}</span></label>`).join("");
+ const pr=$("prog");pr.hidden=false;pr.max=d.phases.length;
+ const upd=()=>{const c=[...document.querySelectorAll("#pout input")].filter(x=>x.checked).map(x=>+x.dataset.i);
+  localStorage.setItem(key,JSON.stringify(c));pr.value=c.length};
+ $("pout").onchange=upd;upd()}
+async function ask(){const o=$("aout");o.hidden=false;o.textContent="Thinking…";
+ const d=await j("/api/ask",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({question:$("q").value,language:$("lang").value})});
+ o.textContent=d.answer||d.error}
+async function interns(){const d=await j("/api/internships?domain="+encodeURIComponent($("dom").value));
+ $("iout").innerHTML=d.map(x=>`<div class="item"><a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.name)}</a></div>`).join("")+
+ '<p class="tag">Check eligibility and deadlines on the official page before applying.</p>'}
+async function near(){const d=await j(`/api/nearby?location=${encodeURIComponent($("loc").value)}&kind=${encodeURIComponent($("kind").value)}`);
+ $("nout").innerHTML=d.error?`<p class="empty">${esc(d.error)}</p>`:`<div class="item"><a href="${esc(d.osm)}" target="_blank" rel="noopener">Open in OpenStreetMap</a></div><div class="item"><a href="${esc(d.google)}" target="_blank" rel="noopener">Open in Google Maps</a></div>`}
+async function road(){const d=await j("/api/roadmap?goal="+encodeURIComponent($("goal").value));
+ $("rmout").innerHTML=d.steps?"<ol>"+d.steps.map(s=>`<li>${esc(s)}</li>`).join("")+"</ol>":'<p class="empty">No roadmap yet for that goal.</p>'}
+j("/api/roadmap").then(d=>{$("goal").innerHTML=d.available.map(g=>`<option>${esc(g)}</option>`).join("")});
+findRes();
+</script>
+</body>
+</html>
