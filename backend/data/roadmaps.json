@@ -1,0 +1,6 @@
+{
+ "ai engineer": ["Python programming","Mathematics and statistics","Data structures and algorithms","Machine learning","Deep learning","AI projects and portfolio","Internship preparation","Interview practice"],
+ "data analyst": ["Python and SQL","Statistics","Pandas and visualisation","Dashboards (Power BI / Tableau)","Portfolio projects","Internship applications"],
+ "web developer": ["HTML, CSS, JavaScript","Git and GitHub","A frontend framework (React)","Backend basics (Node.js or Flask)","Databases","Deploy 2 projects","Internship applications"],
+ "iot developer": ["C/C++ and Python basics","Electronics fundamentals","Arduino / ESP32","Sensors and data collection","Dashboards (Flask / Node.js)","ML on sensor data","Field project"]
+}
