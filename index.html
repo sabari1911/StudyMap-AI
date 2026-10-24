@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#101b35">
+  <meta name="description" content="StudyFlow AI helps students discover learning resources, courses, internships and build a personal study plan.">
+  <title>StudyFlow AI — Your learning, in one flow</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar">
+      <a class="brand" href="#" aria-label="StudyFlow AI home"><span class="brand-mark">✳</span><span>studyflow<span class="brand-ai"> AI</span></span></a>
+      <div class="workspace-label">WORKSPACE</div>
+      <nav class="nav-list" aria-label="Main navigation">
+        <button class="nav-item active" data-view="dashboard"><span>⌂</span> Overview</button>
+        <button class="nav-item" data-view="discover"><span>⌕</span> Discover learning</button>
+        <button class="nav-item" data-view="courses"><span>▤</span> Free courses</button>
+        <button class="nav-item" data-view="internships"><span>↗</span> Internships</button>
+        <button class="nav-item" data-view="nearby"><span>◎</span> Nearby opportunities</button>
+        <button class="nav-item" data-view="planner"><span>▦</span> My study plan</button>
+      </nav>
+      <div class="sidebar-bottom"><div class="mini-note"><span class="sparkle">✦</span><b>Small steps add up.</b><p>Your next opportunity could be one search away.</p></div><div class="profile"><div class="avatar">S</div><div><b>Student workspace</b><small>Keep growing every day</small></div></div></div>
+    </aside>
+    <main class="main-area">
+      <header class="topbar"><button class="mobile-menu" id="mobileMenu" aria-label="Toggle navigation">☰</button><div class="breadcrumb">Workspace <span>/</span> <b id="pageCrumb">Overview</b></div><div class="top-actions"><span class="status-pill"><i></i> Learning mode</span><label class="language-label" for="languageSelect">Language</label><select id="languageSelect" aria-label="Choose language"><option value="en">English</option><option value="ta">தமிழ்</option></select></div></header>
+      <div class="content" id="content">
+        <section class="welcome-row"><div><div class="eyebrow"><span class="eyebrow-dot"></span> YOUR PERSONAL LEARNING SPACE</div><h1 id="welcomeTitle">Make your next move <span>count.</span></h1><p class="subheading" id="welcomeSub">Learn smarter, discover opportunities, and turn your goals into a plan.</p></div><div class="date-card"><span>✦</span><div><small>YOUR JOURNEY</small><b id="todayDate">One step at a time</b></div></div></section>
+        <section class="hero-card"><div class="hero-copy"><span class="hero-kicker">A LITTLE PROGRESS, EVERY DAY</span><h2>One place for everything<br>you need to <em>grow.</em></h2><p>Find useful resources, explore courses and internships, and build a routine that works for you.</p><button class="button button-light" data-go="discover">Explore learning <span>→</span></button></div><div class="hero-art" aria-hidden="true"><div class="orbit orbit-one"></div><div class="orbit orbit-two"></div><div class="art-card art-card-main"><div class="art-top"><span>✳ studyflow</span><span class="tiny-chip">YOUR PLAN</span></div><div class="art-lines"><i></i><i></i><i></i></div><div class="art-progress"><span></span></div><small>Progress starts here</small></div><div class="floating-badge badge-course">▤ <span>Learn something new</span></div><div class="floating-badge badge-check">✓ <span>One task done</span></div><div class="art-star">✦</div></div></section>
+        <section class="stats-grid"><article class="stat-card"><div class="stat-icon purple">⌕</div><div><span>Learning resources</span><b>Explore freely</b><small>Find your next topic</small></div></article><article class="stat-card"><div class="stat-icon green">▤</div><div><span>Course discovery</span><b>Free-first</b><small>Learn without the guesswork</small></div></article><article class="stat-card"><div class="stat-icon orange">↗</div><div><span>Career growth</span><b>Find opportunities</b><small>Courses and internships</small></div></article><article class="stat-card"><div class="stat-icon blue">▦</div><div><span>Study planner</span><b id="taskCount">0 tasks</b><small>Build a consistent routine</small></div></article></section>
+        <section class="dashboard-grid"><article class="panel search-panel"><div class="panel-heading"><div><span class="section-kicker">START HERE</span><h3>What do you want to learn?</h3><p>Search a topic and get useful places to start.</p></div><span class="heading-icon">✦</span></div><form class="search-form" id="mainSearch"><span>⌕</span><input id="mainSearchInput" placeholder="Try Python, machine learning, web development..." autocomplete="off" aria-label="Search learning topics"><button class="button button-primary">Search <span>→</span></button></form><div class="popular-searches"><span>Popular:</span><button data-search="Python">Python</button><button data-search="Artificial Intelligence">AI</button><button data-search="Data Science">Data Science</button><button data-search="Web Development">Web development</button></div><div id="searchPreview" class="search-preview hidden"></div></article>
+        <article class="panel progress-panel"><div class="panel-heading"><div><span class="section-kicker">YOUR MOMENTUM</span><h3>Keep your streak alive</h3><p>Every focused session counts.</p></div><span class="heading-icon">↗</span></div><div class="progress-ring-wrap"><div class="progress-ring"><div><b id="progressPercent">0%</b><small>planned</small></div></div><div class="progress-copy"><b id="progressHeadline">Your plan starts here</b><p id="progressText">Add a study task to turn your goal into action.</p><button class="text-link" data-go="planner">Open my study plan →</button></div></div></article></section>
+        <section class="panel quick-panel"><div class="section-heading"><div><span class="section-kicker">YOUR NEXT STEP</span><h3>Explore your options</h3></div><span class="muted">Choose a path to get started</span></div><div class="quick-grid"><button class="quick-card" data-go="courses"><span class="quick-icon green">▤</span><span><b>Free courses</b><small>Build a new skill</small></span><span class="quick-arrow">↗</span></button><button class="quick-card" data-go="internships"><span class="quick-icon orange">↗</span><span><b>Internships</b><small>Take your first career step</small></span><span class="quick-arrow">↗</span></button><button class="quick-card" data-go="nearby"><span class="quick-icon blue">◎</span><span><b>Learn near you</b><small>Find local learning spaces</small></span><span class="quick-arrow">↗</span></button><button class="quick-card" data-go="planner"><span class="quick-icon purple">▦</span><span><b>Study planner</b><small>Make time for your goals</small></span><span class="quick-arrow">↗</span></button></div></section>
+        <footer class="footer"><span>✳ studyflow AI</span><span>Made for curious minds · Verify course and internship details on the provider's site.</span></footer>
+      </div>
+    </main>
+  </div>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="app.js"></script>
+</body>
+</html>
