@@ -1,83 +1,72 @@
 # StudyFlow AI — AI-Powered Personalized Student Learning Platform
 
-StudyFlow AI is a responsive student learning dashboard prototype designed to help learners discover learning resources, explore free-first courses, find internship portals, search for local learning spaces and organise study tasks in one place.
+StudyFlow AI helps students discover learning resources, build study plans, explore internship portals, find nearby learning spaces, follow career roadmaps, and ask a multilingual AI tutor.
 
-> **Current status:** Working front-end prototype. The product name and repository name differ: the repository is `StudyMap-AI`, while the interface is branded `StudyFlow AI`.
+This repository now contains two versions:
+- **Root front-end prototype** (index.html, styles.css, app.js) — the existing static dashboard.
+- **Flask app from the uploaded ZIP** (frontend/, backend/) — a separate front end plus API backend.
 
-## Features
+## Features in the Flask version
+- Search a curated catalogue of learning resources and filter for free resources.
+- Generate a topic-based study plan and track completed phases in browser local storage.
+- Ask the AI tutor in a selected language (requires an Anthropic API key).
+- Open internship portal searches.
+- Search map links for libraries and learning centres by entered location.
+- Browse career roadmaps for AI engineering, data analysis, web development and IoT.
 
-- **Learning discovery:** Search a curated starter catalogue of learning resources, then open official providers or run a broader web search.
-- **Free-first courses:** Browse beginner-friendly programming, AI, data science and web-development courses. Paid certificate/access terms are labelled where applicable.
-- **Internship discovery:** Quick links to recognised internship and open-source opportunity portals.
-- **Nearby learning places:** Enter a city, area or PIN code and open a map/web search for libraries, training centres or other learning spaces. Location is not read automatically.
-- **Study planner:** Add, complete and delete tasks, optionally assign due dates, and track completion progress.
-- **English/Tamil interface labels:** A language selector changes selected navigation and welcome labels. Course content itself may remain in its original language.
-- **Responsive design:** Desktop, tablet and mobile layouts.
-- **Privacy-minded prototype:** Study tasks and language preference are stored in the current browser's local storage. No user account or backend is required for the demo.
+## Run the Flask version locally
 
-## Run locally
+Use Python 3.10+ and run these commands from the repository root.
 
-No build step or package installation is required.
+```bash
+python -m venv .venv
+```
 
-1. Clone or download this repository.
-2. Open `index.html` in a modern browser.
-3. For a local web server, run one of these commands from the project folder:
+**Windows PowerShell**
+```powershell
+.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+Copy-Item .env.example .env
+python backend/app.py
+```
 
-   **Python**
-   ```bash
-   python -m http.server 8000
-   ```
+**macOS / Linux**
+```bash
+source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env
+python backend/app.py
+```
 
-   Then visit `http://localhost:8000`.
+Open http://localhost:5000. The AI tutor returns a setup hint until you add a valid ANTHROPIC_API_KEY to .env. Never commit your real .env or API key.
 
-   **Node.js**
-   ```bash
-   npx serve .
-   ```
+## API endpoints
+| Method and endpoint | Purpose |
+|---|---|
+| GET /api/resources?q=python&free=1 | Search learning resources |
+| POST /api/plan | Generate a study plan; JSON: { "topic": "Python", "days": 30, "hours_per_day": 2 } |
+| POST /api/ask | Ask the AI tutor; JSON: { "question": "...", "language": "Tamil" } |
+| GET /api/internships?domain=python | Return internship portal links |
+| GET /api/nearby?location=Madurai&kind=library | Return map search links |
+| GET /api/roadmap?goal=ai%20engineer | Return a career roadmap |
 
 ## Project structure
 
 ```
 StudyMap-AI/
-├── index.html   # App layout and page shell
-├── styles.css   # Responsive design system
-├── app.js       # Navigation, resource catalogue, filters and planner
-└── README.md    # Project guide
+├── index.html, styles.css, app.js   # Existing static prototype
+├── frontend/index.html              # Flask version interface
+├── backend/app.py                  # Flask API and static-file server
+├── backend/data/resources.json      # Curated learning resources
+├── backend/data/roadmaps.json       # Career roadmaps
+├── docs/PROJECT_OVERVIEW.md
+├── requirements.txt
+├── .env.example
+└── LICENSE
 ```
 
-## Important limitations
-
-This is a front-end prototype, not yet a production AI platform.
-
-- The learning catalogue is curated and static; it is not a live index of the entire internet.
-- Search links open external providers/search pages. The app does not scrape or guarantee the accuracy of third-party listings.
-- Course prices, access rules, internship eligibility and deadlines can change. Verify details on official sites.
-- Nearby search hands off to a map or web-search provider; it does not currently use a maps API or geolocation.
-- Tamil support currently covers selected interface labels, not full translation of every screen or external course.
-- Planner data is stored locally in the browser and does not sync between devices.
-- There is no login, cloud database, AI/LLM integration, recommendation model or RAG pipeline yet. Do not enter sensitive personal information.
-
-## Roadmap
-
-1. Add automated tests and accessibility checks.
-2. Build a secure backend and optional account-based task sync.
-3. Connect a vetted live resource search/API with source attribution and expiry checks.
-4. Add a language-aware AI tutor with citations and safe fallback behaviour.
-5. Add a retrieval-augmented generation (RAG) pipeline over trusted study materials.
-6. Add optional maps integration and clear consent for location-based results.
-7. Add deployment instructions and continuous integration.
-
-## Technology
-
-- HTML5
-- CSS3 (responsive layouts)
-- Vanilla JavaScript (no framework dependency)
-- Browser local storage for demo preferences and study tasks
-
-## Responsible use
-
-StudyFlow AI is a learning discovery aid. It does not guarantee that any course or internship is free, legitimate, open, or suitable for a particular student. Confirm details with the official provider and never pay a recruiter to secure an internship.
+## Current limitations
+This is a student project prototype, not a production-ready AI platform. The course catalogue is static; internship results are portal links, not verified live listings. Nearby search opens external map searches and does not use automatic geolocation. The AI tutor requires an API key and internet access. The Flask server currently runs in debug mode for local development only; do not deploy it publicly as-is. Authentication, database/cloud sync, a RAG pipeline, comprehensive tests and production deployment are not implemented yet.
 
 ## License
-
-No license has been added yet. Add a license file before permitting reuse or redistribution.
+MIT. See LICENSE.
