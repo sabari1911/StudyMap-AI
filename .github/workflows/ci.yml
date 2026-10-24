@@ -19,17 +19,17 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
-      - name: Validate Python syntax
-        run: python -m py_compile backend/app.py
-      - name: Validate JSON data files
+          python-version: "3.11"
+      - name: Validate JSON data
         run: |
           python -m json.tool backend/data/resources.json > /dev/null
           python -m json.tool backend/data/roadmaps.json > /dev/null
-      - name: Check required project files
+      - name: Compile Python backend
+        run: python -m py_compile backend/app.py
+      - name: Check required files
         run: |
-          test -f index.html
-          test -f app.js
-          test -f styles.css
           test -f frontend/index.html
+          test -f index.html
+          test -f styles.css
+          test -f app.js
           test -f README.md

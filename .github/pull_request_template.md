@@ -1,12 +1,12 @@
-## Summary
-Describe what this change does and why.
+## What does this change do?
+Describe the change and the student problem it addresses.
 
-## Changes
-- 
+## How was it tested?
+- [ ] Tested locally
+- [ ] No secrets or API keys included
+- [ ] Documentation updated if needed
+- [ ] Accessibility and mobile layout considered
+- [ ] Existing functionality checked
 
-## Verification
-- [ ] I checked the changed files locally.
-- [ ] Python syntax and JSON data are valid where applicable.
-- [ ] I tested the relevant feature or documented why it could not be tested.
-- [ ] I did not commit API keys, passwords, or .env files.
-- [ ] I updated documentation if needed.
+## Screenshots (for UI changes)
+Add screenshots where useful.

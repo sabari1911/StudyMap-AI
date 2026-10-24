@@ -1,21 +1,18 @@
 # Contributing to StudyFlow AI
 
-Thanks for helping improve StudyFlow AI.
+Thank you for helping improve this student learning project.
 
 ## Before you start
-1. Open an issue describing a bug or feature idea.
-2. Avoid duplicate issues by checking existing discussions.
-3. Never share API keys, passwords, personal data, or private student information.
+1. Check existing Issues to avoid duplicate work.
+2. Open an issue to discuss large changes before implementing them.
+3. Never commit passwords, API keys, private student data, or your local `.env` file.
 
-## Local setup
-1. Install Python 3.10 or newer.
-2. Create a virtual environment: python -m venv .venv
-3. Activate it and install dependencies: pip install -r requirements.txt
-4. Copy .env.example to .env; add an AI API key only if you need the AI tutor.
-5. Run python backend/app.py and open http://localhost:5000.
+## Development
+- Keep the static prototype and Flask version clearly separated.
+- Use readable names and small, focused changes.
+- Prefer official provider links for learning resources.
+- Clearly label paid certificates or limitations.
+- Test changed functionality locally before opening a pull request.
 
 ## Pull requests
-- Keep changes focused and explain the reason for the change.
-- Test affected functionality.
-- Update the README when setup or behaviour changes.
-- Use the pull request template and never commit .env.
+Explain the problem, summarize the solution, list tests you ran, and include screenshots for interface changes.

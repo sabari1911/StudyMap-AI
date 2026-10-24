@@ -1,13 +1,12 @@
 # Security Policy
 
-## Supported status
-StudyFlow AI is a student project and is currently a prototype. Security fixes are welcome.
+## Supported version
+Security fixes are accepted for the latest code on the `main` branch.
 
 ## Reporting a vulnerability
-Please do not publish API keys, credentials, private student data, or exploitable details in a public issue. Contact the repository owner privately through GitHub's available private contact/reporting options.
+Do not publish API keys, credentials, or exploitable security details in a public issue. Use GitHub's private vulnerability reporting feature if enabled. Otherwise, contact the repository owner privately through their GitHub profile.
 
-## Safe usage
-- Keep real API keys in a local .env file and never commit that file.
-- Do not deploy the development Flask server with debug mode enabled.
-- Do not submit sensitive personal information to the prototype.
-- Verify third-party course and internship details on their official websites.
+## Safe development
+- Keep secrets in local environment variables and never commit `.env`.
+- Do not use real student personal data in test fixtures or issue reports.
+- The Flask server is for local development only; do not expose its debug server publicly.
