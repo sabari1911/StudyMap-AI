@@ -204,21 +204,33 @@ def ask():
     language = d.get("language", "English")
     if not question:
         return jsonify({"error": "Ask a question first."}), 400
-    key = (os.getenv("ANTHROPIC_API_KEY") or "").strip()
-    if not key or key in {"your-key-here", "replace-me", "YOUR_ANTHROPIC_API_KEY"}:
-        return jsonify({"error": "AI tutor is not configured. In Render, open your service → Environment, add a valid ANTHROPIC_API_KEY from the official Anthropic Console, save, and redeploy. Never paste the key into chat or GitHub."}), 503
+    key = (os.getenv("GEMINI_API_KEY") or "").strip()
+    if not key:
+        return jsonify({"error": "AI Tutor is not configured yet. Add GEMINI_API_KEY in your Render web service Environment settings, then redeploy."}), 503
     try:
-        import anthropic
-        client = anthropic.Anthropic(api_key=key)
-        msg = client.messages.create(
-            model=os.getenv("STUDYFLOW_MODEL", "claude-sonnet-4-6"), max_tokens=900, system=SYSTEM_PROMPT,
-            messages=[{"role": "user", "content": f"Answer in {language}.\n\n{question}"}])
-        return jsonify({"answer": "".join(b.text for b in msg.content if b.type == "text")})
+        from google import genai
+        from google.genai import types
+
+        client = genai.Client(api_key=key)
+        response = client.models.generate_content(
+            model=os.getenv("GEMINI_MODEL", "gemini-3.8-flash"),
+            contents=f"Answer in {language}.\\n\\n{question}",
+            config=types.GenerateContentConfig(
+                system_instruction=SYSTEM_PROMPT,
+                max_output_tokens=900,
+            ),
+        )
+        answer = (response.text or "").strip()
+        if not answer:
+            return jsonify({"error": "Gemini returned an empty response. Please try asking in a different way."}), 502
+        return jsonify({"answer": answer})
     except Exception as e:
         message = str(e).lower()
-        if "authentication_error" in message or "invalid bearer token" in message or "invalid x-api-key" in message or "401" in message:
-            return jsonify({"error": "Anthropic rejected the API key. In Render → Environment, replace ANTHROPIC_API_KEY with a newly created, valid key from the official Anthropic Console, save, and redeploy. Do not share the key publicly."}), 502
-        return jsonify({"error": "AI tutor request failed. Check the Anthropic API key, account access, model availability and API billing, then try again."}), 502
+        if "api key" in message or "api_key" in message or "401" in message or "403" in message or "unauthorized" in message:
+            return jsonify({"error": "Gemini could not authenticate this key. Check that GEMINI_API_KEY in Render contains a valid Gemini API key, then redeploy."}), 502
+        if "429" in message or "quota" in message or "resource_exhausted" in message:
+            return jsonify({"error": "Gemini free-tier quota or rate limit reached. Wait and try again later, or check your model and quota in Google AI Studio."}), 502
+        return jsonify({"error": "Gemini AI Tutor request failed. Check the Render logs and confirm the selected Gemini model is available for your API key."}), 502
 
 
 if __name__ == "__main__":
