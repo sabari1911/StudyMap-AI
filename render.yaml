@@ -1,0 +1,15 @@
+# Render Blueprint for StudyFlow AI
+# This config uses a persistent disk so SQLite data and uploaded documents can live at /var/data.
+# IMPORTANT: Render persistent disks may incur charges and are not available on every service plan.
+# Review Render pricing before creating/updating a service from this Blueprint.
+
+services:
+  - type: web
+    name: studyflow-ai
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn backend.app:app
+    disk:
+      name: studyflow-data
+      mountPath: /var/data
+      sizeGB: 1
