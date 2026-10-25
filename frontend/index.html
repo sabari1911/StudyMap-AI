@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#ffffff">
 <meta name="description" content="StudyFlow AI helps students find free courses, plan studies, practise with an AI tutor and discover internships and nearby learning centres.">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <title>StudyFlow AI — Learn smarter</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -133,7 +134,10 @@ button,a,.chip{touch-action:manipulation}
  <form id="authForm"><div id="nameField"><input class="field" id="authName" autocomplete="name" placeholder="Your full name" required minlength="2"></div>
  <input class="field" id="authEmail" type="email" autocomplete="email" placeholder="Email address" required>
  <input class="field" id="authPassword" type="password" autocomplete="current-password" placeholder="Password (at least 8 characters)" required minlength="8">
+ <input class="field" id="authNewPassword" type="password" autocomplete="new-password" placeholder="New password (at least 8 characters)" minlength="8" style="display:none">
  <div class="auth-error" id="authError" role="alert"></div><button class="btn btn-purple" id="authSubmit" style="width:100%;margin-top:5px">Create free account</button></form>
+ <button type="button" class="auth-switch" id="forgotPassword" style="border:0;background:none;color:#28764d;font-weight:700;padding:8px 0">Forgot password?</button>
+ <div id="googleArea" style="margin-top:10px;text-align:center"><div style="font-size:12px;color:#778578;margin:7px 0">or continue with</div><div id="googleButton" style="display:flex;justify-content:center;min-height:40px"></div></div>
  <p class="auth-switch" id="authSwitch">Already have an account? <button type="button" id="switchLogin">Log in</button></p>
  <p class="auth-security">Your password is stored as a secure hash. Use a unique password and do not share it.</p>
  </div>
@@ -160,15 +164,38 @@ $('notesText').value=localStorage.getItem('studyflow-notes')||'';
 $('quizBtn').onclick=()=>{const out=$('notesOut');out.hidden=false;const qs=[{q:'Which keyword defines a function in Python?',a:['func','def','function'],c:1},{q:'Which type stores True or False?',a:['bool','str','list'],c:0},{q:'What does len([1, 2, 3]) return?',a:['2','3','4'],c:1}];out.innerHTML='<h3>Python basics quiz</h3><p>Choose one answer for each question, then check your score.</p>'+qs.map((x,i)=>'<fieldset class="quiz-q"><legend>'+(i+1)+'. '+x.q+'</legend>'+x.a.map((a,j)=>'<label><input type="radio" name="quiz'+i+'" value="'+j+'"> '+a+'</label>').join('')+'</fieldset>').join('')+'<button class="btn btn-purple" id="checkQuiz">Check my score</button><p id="quizScore" aria-live="polite"></p>';$('checkQuiz').onclick=()=>{let score=0;qs.forEach((q,i)=>{if(out.querySelector('input[name=quiz'+i+']:checked')?.value==q.c)score++});$('quizScore').textContent='Score: '+score+'/3. '+(score===3?'Excellent!':score===2?'Good work — review one answer.':'Review the basics and try again.')}};
 loadRoadmaps();
 
-const authOverlay=$('authOverlay');let authMode='register';let currentUser=null;
-function setAuthMode(mode){authMode=mode;const reg=mode==='register';$('authTitle').textContent=reg?'Create your free account':'Welcome back';$('authIntro').textContent=reg?'Create your free student account to personalise your learning space.':'Log in to continue your StudyFlow journey.';$('nameField').style.display=reg?'block':'none';$('authName').required=reg;$('authPassword').autocomplete=reg?'new-password':'current-password';$('authSubmit').textContent=reg?'Create free account':'Log in';$('authSwitch').innerHTML=reg?'Already have an account? <button type="button" id="switchLogin">Log in</button>':'New to StudyFlow? <button type="button" id="switchRegister">Create account</button>';const sw=reg?$('switchLogin'):$('switchRegister');sw.onclick=()=>setAuthMode(reg?'login':'register');$('authError').style.display='none'}
+const authOverlay=$('authOverlay');let authMode='register';let currentUser=null;let googleClientId='';
+function setAuthMode(mode){
+ authMode=mode;const reg=mode==='register',login=mode==='login',forgot=mode==='forgot',reset=mode==='reset';
+ $('authTitle').textContent=reg?'Create your free account':login?'Welcome back':forgot?'Reset your password':'Choose a new password';
+ $('authIntro').textContent=reg?'Create your free student account to personalise your learning space.':login?'Log in to continue your StudyFlow journey.':forgot?'Enter your account email and we will send a one-time reset link if the account exists.':'Your reset link is valid for 30 minutes and works only once.';
+ $('nameField').style.display=reg?'block':'none';$('authName').required=reg;
+ $('authPassword').style.display=(reg||login)?'block':'none';$('authPassword').required=reg||login;
+ $('authNewPassword').style.display=reset?'block':'none';$('authNewPassword').required=reset;
+ $('authEmail').style.display=reset?'none':'block';$('authEmail').required=!reset;
+ $('authSubmit').textContent=reg?'Create free account':login?'Log in':forgot?'Send reset link':'Update password';
+ $('forgotPassword').style.display=login?'inline-block':'none';$('googleArea').style.display=(reg||login)?'block':'none';$('authSwitch').style.display=(reg||login)?'block':'none';
+ $('authSwitch').innerHTML=reg?'Already have an account? <button type="button" id="switchLogin">Log in</button>':login?'New to StudyFlow? <button type="button" id="switchRegister">Create account</button>':'';
+ const sw=reg?$('switchLogin'):login?$('switchRegister'):null;if(sw)sw.onclick=()=>setAuthMode(reg?'login':'register');
+ $('authError').style.display='none';renderGoogleButton();
+}
+function showAuthMessage(message,isError=false){const el=$('authError');el.textContent=message;el.style.display='block';el.style.color=isError?'#b42318':'#216e42';el.style.background=isError?'#fff3f1':'#f0faf3';el.style.border='1px solid '+(isError?'#ffd8d2':'#d8efdf')}
+function renderGoogleButton(){const box=$('googleButton');if(!box)return;box.innerHTML='';if(!googleClientId||!window.google?.accounts?.id||!['register','login'].includes(authMode))return;window.google.accounts.id.initialize({client_id:googleClientId,callback:handleGoogleCredential});window.google.accounts.id.renderButton(box,{type:'standard',theme:'outline',size:'large',text:authMode==='register'?'signup_with':'signin_with',shape:'pill',width:300})}
+async function handleGoogleCredential(response){try{const d=await api('/api/auth/google',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({credential:response.credential})});currentUser=d.user;authOverlay.classList.remove('open');renderAuthUser()}catch(e){showAuthMessage(e.message,true)}}
 function openAuth(mode){setAuthMode(mode);authOverlay.classList.add('open');$('authClose').style.display=currentUser?'block':'none';setTimeout(()=>(mode==='register'&&$('authName').required)?$('authName').focus():$('authEmail').focus(),50)}
 function closeAuth(){if(!currentUser)return;authOverlay.classList.remove('open')}
-$('openLogin').onclick=()=>openAuth('login');$('openRegister').onclick=()=>currentUser?logoutUser():openAuth('register');$('authClose').onclick=closeAuth;authOverlay.addEventListener('click',e=>{if(e.target===authOverlay)closeAuth()});document.addEventListener('keydown',e=>{if(e.key==='Escape')closeAuth()});
-$('authForm').addEventListener('submit',async e=>{e.preventDefault();const err=$('authError'),btn=$('authSubmit');err.style.display='none';btn.disabled=true;btn.textContent='Please wait…';try{const d=await api(authMode==='register'?'/api/auth/register':'/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({name:$('authName').value,email:$('authEmail').value,password:$('authPassword').value})});currentUser=d.user;authOverlay.classList.remove('open');renderAuthUser()}catch(ex){err.textContent=ex.message;err.style.display='block'}finally{btn.disabled=false;btn.textContent=authMode==='register'?'Create free account':'Log in'}});
+$('openLogin').onclick=()=>openAuth('login');$('openRegister').onclick=()=>currentUser?logoutUser():openAuth('register');$('authClose').onclick=closeAuth;
+authOverlay.addEventListener('click',e=>{if(e.target===authOverlay)closeAuth()});document.addEventListener('keydown',e=>{if(e.key==='Escape')closeAuth()});
+$('forgotPassword').onclick=()=>setAuthMode('forgot');
+$('authForm').addEventListener('submit',async e=>{e.preventDefault();const btn=$('authSubmit');$('authError').style.display='none';btn.disabled=true;btn.textContent='Please wait…';try{let d;
+ if(authMode==='register'||authMode==='login'){d=await api(authMode==='register'?'/api/auth/register':'/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({name:$('authName').value,email:$('authEmail').value,password:$('authPassword').value})});currentUser=d.user;authOverlay.classList.remove('open');renderAuthUser()}
+ else if(authMode==='forgot'){d=await api('/api/auth/forgot-password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:$('authEmail').value})});showAuthMessage(d.message||'If the account exists, a reset link has been sent.')}
+ else if(authMode==='reset'){const token=new URLSearchParams(location.search).get('reset_token')||'';d=await api('/api/auth/reset-password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token,password:$('authNewPassword').value})});history.replaceState({},'',location.pathname);setAuthMode('login');showAuthMessage(d.message||'Password updated. Please log in.')}
+ }catch(ex){showAuthMessage(ex.message,true);if(authMode==='register'&&/already exists/i.test(ex.message)){setAuthMode('login');showAuthMessage('This email already has an account. Please log in instead.')}}finally{btn.disabled=false;btn.textContent=authMode==='register'?'Create free account':authMode==='login'?'Log in':authMode==='forgot'?'Send reset link':'Update password'}});
 async function logoutUser(){try{await api('/api/auth/logout',{method:'POST',credentials:'same-origin'})}catch{}currentUser=null;renderAuthUser()}
 function renderAuthUser(){if(!currentUser){$('accountStatus').style.display='none';$('openLogin').style.display='';$('openRegister').style.display='';$('openRegister').textContent='Create account';$('authClose').style.display='none';openAuth('register');return}$('accountStatus').style.display='block';$('accountStatus').textContent='✨ Welcome, '+currentUser.name+' — your learning journey starts here.';$('openLogin').style.display='none';$('openRegister').style.display='';$('openRegister').textContent='Log out';$('authClose').style.display='block';authOverlay.classList.remove('open')}
-api('/api/auth/me',{credentials:'same-origin'}).then(d=>{currentUser=d.user||null;renderAuthUser()}).catch(()=>openAuth('register'));
+async function initAuth(){try{const cfg=await api('/api/auth/config');googleClientId=cfg.google_client_id||''}catch{}const token=new URLSearchParams(location.search).get('reset_token');if(token){setAuthMode('reset');authOverlay.classList.add('open');$('authClose').style.display='none'}else{try{const d=await api('/api/auth/me',{credentials:'same-origin'});currentUser=d.user||null;renderAuthUser()}catch{currentUser=null;openAuth('register')}}if(!googleClientId){$('googleArea').title='Google sign-in requires GOOGLE_CLIENT_ID to be configured in Render.';$('googleArea').style.opacity='.65'}}
+initAuth();
 
 </script>
 </body>
