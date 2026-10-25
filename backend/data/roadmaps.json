@@ -1,6 +1,101 @@
 {
- "ai engineer": ["Python programming","Mathematics and statistics","Data structures and algorithms","Machine learning","Deep learning","AI projects and portfolio","Internship preparation","Interview practice"],
- "data analyst": ["Python and SQL","Statistics","Pandas and visualisation","Dashboards (Power BI / Tableau)","Portfolio projects","Internship applications"],
- "web developer": ["HTML, CSS, JavaScript","Git and GitHub","A frontend framework (React)","Backend basics (Node.js or Flask)","Databases","Deploy 2 projects","Internship applications"],
- "iot developer": ["C/C++ and Python basics","Electronics fundamentals","Arduino / ESP32","Sensors and data collection","Dashboards (Flask / Node.js)","ML on sensor data","Field project"]
+  "ai engineer": [
+    "Python programming",
+    "Mathematics and statistics",
+    "Data structures and algorithms",
+    "Machine learning",
+    "Deep learning",
+    "AI projects and portfolio",
+    "Internship preparation",
+    "Interview practice"
+  ],
+  "data analyst": [
+    "Python and SQL",
+    "Statistics",
+    "Pandas and visualisation",
+    "Dashboards (Power BI / Tableau)",
+    "Portfolio projects",
+    "Internship applications"
+  ],
+  "web developer": [
+    "HTML, CSS, JavaScript",
+    "Git and GitHub",
+    "A frontend framework (React)",
+    "Backend basics (Node.js or Flask)",
+    "Databases",
+    "Deploy 2 projects",
+    "Internship applications"
+  ],
+  "iot developer": [
+    "C/Python and electronics fundamentals",
+    "Arduino or ESP32 and sensors",
+    "Collect and clean sensor data",
+    "Connect device data to an API",
+    "Build a dashboard and alerts",
+    "Test a working prototype",
+    "Document and present the project"
+  ],
+  "python developer": [
+    "Python syntax, functions and collections",
+    "OOP, exceptions and file handling",
+    "Git and GitHub",
+    "Build a command-line project",
+    "Learn Flask or Django basics",
+    "Build and deploy a web API",
+    "Portfolio and internship preparation"
+  ],
+  "frontend developer": [
+    "HTML and semantic structure",
+    "CSS, flexbox, grid and responsive design",
+    "JavaScript fundamentals",
+    "DOM, forms and API requests",
+    "Git, GitHub and deployment",
+    "Build a responsive portfolio project",
+    "Prepare for internships and interviews"
+  ],
+  "full stack developer": [
+    "HTML, CSS and JavaScript",
+    "Frontend framework fundamentals",
+    "Backend with Flask or Node.js",
+    "REST APIs and authentication basics",
+    "SQL and database design",
+    "Deploy a complete full-stack project",
+    "Testing, documentation and portfolio"
+  ],
+  "cybersecurity analyst": [
+    "Networking and operating system basics",
+    "Linux and command-line skills",
+    "Security fundamentals and threat modelling",
+    "Log analysis and defensive monitoring",
+    "Practise in legal beginner labs",
+    "Write a sample incident report",
+    "Build a defensive security portfolio"
+  ],
+  "cloud engineer": [
+    "Cloud fundamentals and networking",
+    "Linux and command-line skills",
+    "Identity and access management",
+    "Deploy an application and configure storage",
+    "Monitoring, backups and cost awareness",
+    "Learn basic automation",
+    "Document a cloud project"
+  ],
+  "ui ux designer": [
+    "Design principles and accessibility",
+    "User research and problem statements",
+    "Wireframes and user flows",
+    "Create high-fidelity prototypes",
+    "Usability testing and iteration",
+    "Build a case-study portfolio",
+    "Prepare for internships"
+  ],
+  "mobile app developer": [
+    "Programming and UI fundamentals",
+    "Choose Flutter or Android development",
+    "Layouts, navigation and forms",
+    "Connect an API and store data",
+    "Test on different screen sizes",
+    "Build and publish a demo project",
+    "Portfolio and internship preparation"
+  ]
 }
