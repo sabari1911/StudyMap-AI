@@ -21,6 +21,53 @@ h1{font:800 clamp(29px,4.2vw,43px)/1.2 'Plus Jakarta Sans',sans-serif;letter-spa
 @media(max-width:650px){.wrap{padding:20px 13px 35px}.hero{padding-top:8px}h1{letter-spacing:-1px}.hero p{font-size:15px}.panel{padding:18px;border-radius:16px}.form-row>*{width:100%}.check{width:auto}.btn{width:100%}.stat{min-width:calc(33.3% - 10px);padding:10px 9px}.stat strong{font-size:20px}.stat span{font-size:11px}.pill{padding:9px 12px;font-size:13px}}
 
 .account-actions{position:absolute;top:24px;right:24px;display:flex;gap:8px}.account-btn{border:1px solid #dce2f6;background:#ffffffd9;color:#5145ed;border-radius:999px;padding:9px 15px;font-weight:700}.account-btn.primary{background:#5145ed;color:#fff;border-color:#5145ed}.account-status{display:none;margin:0 auto 12px;max-width:520px;background:#ffffffd9;border:1px solid #dce3f6;padding:8px 14px;border-radius:999px;color:#4f5b7b;font-size:13px}.auth-overlay{position:fixed;inset:0;background:#15204499;backdrop-filter:blur(6px);z-index:99;display:none;align-items:center;justify-content:center;padding:18px}.auth-overlay.open{display:flex}.auth-card{position:relative;background:#fff;border-radius:22px;padding:28px;width:min(100%,430px);box-shadow:0 24px 90px #111a3d40}.auth-card h2{margin:0 0 5px;font:800 25px 'Plus Jakarta Sans',sans-serif}.auth-card p{color:#697493;margin:0 0 18px}.auth-card .field{width:100%;display:block;margin:10px 0}.auth-close{position:absolute;right:16px;top:12px;border:0;background:transparent;font-size:25px;color:#697493}.auth-switch{font-size:13px;margin-top:15px!important}.auth-switch button{border:0;background:none;color:#5145ed;font-weight:800}.auth-error{color:#b42318;background:#fff0ef;padding:9px 11px;border-radius:10px;font-size:13px;margin:10px 0;display:none}.account-actions{z-index:2}@media(max-width:650px){.account-actions{position:static;justify-content:center;margin:0 0 10px}.hero{padding-top:4px}}
+
+/* Mobile layout and touch fixes */
+html{width:100%;max-width:100%;overflow-x:hidden;-webkit-text-size-adjust:100%}
+body{width:100%;max-width:100%;overflow-x:hidden}
+.wrap{width:100%;min-width:0}
+main,.panel,.hero,.pills{min-width:0;max-width:100%}
+.panel{overflow-wrap:anywhere}
+.field{width:100%;max-width:100%;min-width:0}
+.form-row{width:100%;min-width:0}
+.form-row .field{flex:1 1 190px}
+button,a,.chip{touch-action:manipulation}
+.resource a{overflow-wrap:anywhere}
+.auth-card{max-height:90dvh;overflow-y:auto}
+@media(max-width:650px){
+ .wrap{padding:14px 12px 28px}
+ .hero{padding:8px 0 18px}
+ h1{font-size:clamp(27px,8vw,36px);line-height:1.2;letter-spacing:-1px}
+ .hero p{font-size:15px;padding:0 4px}
+ .stats{gap:8px;margin-top:18px}
+ .stat{flex:1 1 28%;min-width:0;padding:10px 5px;border-radius:13px}
+ .stat strong{font-size:19px}
+ .stat span{font-size:10px;line-height:1.3}
+ .pills{justify-content:flex-start;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;padding:2px 1px 10px;margin:0 -1px 15px;scrollbar-width:thin;-webkit-overflow-scrolling:touch}
+ .pill{flex:0 0 auto;padding:10px 13px;font-size:13px;white-space:nowrap}
+ .panel{padding:16px 14px;margin-bottom:14px;border-radius:16px}
+ .panel h2{font-size:19px}
+ .intro{font-size:13px;line-height:1.55}
+ .form-row{display:flex;flex-direction:column;align-items:stretch;gap:10px}
+ .form-row .field,.form-row .select,.form-row .btn{width:100%;max-width:100%;flex:1 1 auto}
+ .form-row .check{align-self:flex-start;width:auto}
+ .btn{min-height:44px}
+ .chips,.popular{gap:7px}
+ .chip{padding:8px 10px;font-size:12px}
+ .resource{padding:13px 0}
+ .grid{grid-template-columns:minmax(0,1fr);gap:10px}
+ .account-actions{position:static;justify-content:center;margin:0 0 12px}
+ .account-btn{min-height:42px}
+ .auth-card{padding:23px 18px;border-radius:18px}
+ .auth-card .field{margin:9px 0}
+ .foot{font-size:11px;padding:10px 4px}
+}
+@media(max-width:360px){
+ .wrap{padding-left:9px;padding-right:9px}
+ .panel{padding:13px 11px}
+ .stat strong{font-size:17px}
+ .badge{font-size:11px;padding:7px 11px}
+}
 </style>
 </head>
 <body>
@@ -105,7 +152,8 @@ $('showRoad').onclick=async()=>{try{const d=await api('/api/roadmap?goal='+encod
 $('saveNotes').onclick=()=>{localStorage.setItem('studyflow-notes',$('notesText').value);$('notesOut').hidden=false;$('notesOut').textContent='Your notes are saved in this browser.'};
 $('notesText').value=localStorage.getItem('studyflow-notes')||'';
 $('quizBtn').onclick=()=>{const out=$('notesOut');out.hidden=false;out.innerHTML='';out.textContent='Quick quiz — Python basics\n1. Which keyword defines a function in Python? (Answer: def)\n2. Which data type stores True or False? (Answer: bool)\n3. What does len([1, 2, 3]) return? (Answer: 3)';};
-loadRoadmaps();findRes();\n
+loadRoadmaps();findRes();
+
 const authOverlay=$('authOverlay');let authMode='register';let currentUser=null;
 function setAuthMode(mode){authMode=mode;const reg=mode==='register';$('authTitle').textContent=reg?'Create your free account':'Welcome back';$('authIntro').textContent=reg?'Create your free student account to personalise your learning space.':'Log in to continue your StudyFlow journey.';$('nameField').style.display=reg?'block':'none';$('authName').required=reg;$('authPassword').autocomplete=reg?'new-password':'current-password';$('authSubmit').textContent=reg?'Create free account':'Log in';$('authSwitch').innerHTML=reg?'Already have an account? <button type="button" id="switchLogin">Log in</button>':'New to StudyFlow? <button type="button" id="switchRegister">Create account</button>';const sw=reg?$('switchLogin'):$('switchRegister');sw.onclick=()=>setAuthMode(reg?'login':'register');$('authError').style.display='none'}
 function openAuth(mode){setAuthMode(mode);authOverlay.classList.add('open');setTimeout(()=>(mode==='register'&&$('authName').required)?$('authName').focus():$('authEmail').focus(),50)}
