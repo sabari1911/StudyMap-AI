@@ -441,7 +441,7 @@ def generate_quiz():
         from google.genai import types
         client = genai.Client(api_key=key)
         response = client.models.generate_content(
-            model=os.getenv("GEMINI_MODEL", "gemini-2.5-flash"),
+            model=os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite"),
             contents=prompt,
             config=types.GenerateContentConfig(response_mime_type="application/json", max_output_tokens=min(7000, 400 + count * 300)),
         )
@@ -456,9 +456,16 @@ def generate_quiz():
                 raise ValueError("Generated quiz format was invalid.")
             clean.append({"question": item["question"][:500], "options": [str(x)[:250] for x in options], "answer": answer, "explanation": str(item.get("explanation", ""))[:700]})
         return jsonify({"title": str(quiz.get("title") or topic or "Practice quiz")[:120], "questions": clean})
-    except Exception:
+    except Exception as e:
+        message = str(e).lower()
         app.logger.exception("AI quiz generation failed")
-        return jsonify({"error": "Could not generate the quiz. Check Render Logs and confirm GEMINI_API_KEY and GEMINI_MODEL=gemini-2.5-flash."}), 502
+        if "api key" in message or "api_key" in message or "401" in message or "unauthorized" in message:
+            return jsonify({"error": "Gemini API key was rejected. Check GEMINI_API_KEY in Render and create a new key in Google AI Studio if needed."}), 502
+        if "429" in message or "quota" in message or "resource_exhausted" in message or "rate limit" in message:
+            return jsonify({"error": "Gemini rate limit or free-tier quota reached. Wait and try again, then check Google AI Studio usage."}), 502
+        if "model" in message and ("not found" in message or "not supported" in message or "permission" in message or "not available" in message):
+            return jsonify({"error": "The configured Gemini model is unavailable for this API key. In Render set GEMINI_MODEL to gemini-3.5-flash-lite, save, and redeploy."}), 502
+        return jsonify({"error": "Could not generate the quiz: " + str(e)[:350] + ". Check Render Logs for details."}), 502
 
 
 @app.post("/api/ask")
@@ -477,7 +484,7 @@ def ask():
 
         client = genai.Client(api_key=key)
         response = client.models.generate_content(
-            model=os.getenv("GEMINI_MODEL", "gemini-2.5-flash"),
+            model=os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite"),
             contents=f"Answer in {language}.\\n\\n{question}",
             config=types.GenerateContentConfig(
                 system_instruction=SYSTEM_PROMPT,
@@ -490,12 +497,14 @@ def ask():
         return jsonify({"answer": answer})
     except Exception as e:
         message = str(e).lower()
-        if "api key" in message or "api_key" in message or "401" in message or "403" in message or "unauthorized" in message:
-            return jsonify({"error": "Gemini could not authenticate this key. Check that GEMINI_API_KEY in Render contains a valid Gemini API key, then redeploy."}), 502
-        if "429" in message or "quota" in message or "resource_exhausted" in message:
-            return jsonify({"error": "Gemini free-tier quota or rate limit reached. Wait and try again later, or check your model and quota in Google AI Studio."}), 502
         app.logger.exception("Gemini AI Tutor request failed")
-        return jsonify({"error": "Gemini AI Tutor request failed. In Render, check GEMINI_API_KEY and set GEMINI_MODEL to gemini-2.5-flash, then inspect Render Logs."}), 502
+        if "api key" in message or "api_key" in message or "401" in message or "unauthorized" in message:
+            return jsonify({"error": "Gemini API key was rejected. Check GEMINI_API_KEY in Render and create a new key in Google AI Studio if needed."}), 502
+        if "429" in message or "quota" in message or "resource_exhausted" in message or "rate limit" in message:
+            return jsonify({"error": "Gemini rate limit or free-tier quota reached. Wait and try again, then check Google AI Studio usage."}), 502
+        if "model" in message and ("not found" in message or "not supported" in message or "permission" in message or "not available" in message):
+            return jsonify({"error": "The configured Gemini model is unavailable for this API key. In Render set GEMINI_MODEL to gemini-3.5-flash-lite, save, and redeploy."}), 502
+        return jsonify({"error": "Gemini AI Tutor failed: " + str(e)[:350] + ". Check Render Logs for details."}), 502
 
 
 if __name__ == "__main__":
