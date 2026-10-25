@@ -1,6 +1,7 @@
 """StudyFlow AI backend (Flask). Run: python backend/app.py"""
-import json, os, re, sqlite3, secrets
-from datetime import timedelta
+import json, os, re, sqlite3, secrets, hashlib, smtplib
+from datetime import timedelta, datetime, timezone
+from email.message import EmailMessage
 from urllib.parse import quote_plus
 from pathlib import Path
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -22,6 +23,7 @@ def get_db():
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     conn.execute("CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, email TEXT NOT NULL UNIQUE COLLATE NOCASE, password_hash TEXT NOT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)")
+    conn.execute("CREATE TABLE IF NOT EXISTS password_reset_tokens (token_hash TEXT PRIMARY KEY, user_id INTEGER NOT NULL, expires_at INTEGER NOT NULL, FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE)")
     return conn
 
 with get_db() as _db:
@@ -95,6 +97,113 @@ def login():
     session["user_name"] = user["name"]
     session.permanent = True
     return jsonify({"user": {"id": user["id"], "name": user["name"], "email": user["email"]}})
+
+
+@app.post("/api/auth/forgot-password")
+def forgot_password():
+    d = request.get_json(silent=True) or {}
+    email = (d.get("email") or "").strip().lower()[:254]
+    if not re.fullmatch(r"[^\s@]+@[^\s@]+\.[^\s@]+", email):
+        return jsonify({"error": "Enter the email address associated with your account."}), 400
+    with get_db() as db:
+        user = db.execute("SELECT id, email FROM users WHERE email = ?", (email,)).fetchone()
+        if user:
+            token = secrets.token_urlsafe(32)
+            token_hash = hashlib.sha256(token.encode("utf-8")).hexdigest()
+            expires = int(datetime.now(timezone.utc).timestamp()) + 1800
+            db.execute("DELETE FROM password_reset_tokens WHERE user_id = ?", (user["id"],))
+            db.execute("INSERT INTO password_reset_tokens (token_hash, user_id, expires_at) VALUES (?, ?, ?)", (token_hash, user["id"], expires))
+    if user:
+        smtp_host = os.getenv("SMTP_HOST")
+        smtp_port = int(os.getenv("SMTP_PORT", "587"))
+        smtp_user = os.getenv("SMTP_USER")
+        smtp_password = os.getenv("SMTP_PASSWORD")
+        sender = os.getenv("SMTP_FROM") or smtp_user
+        if not all([smtp_host, smtp_user, smtp_password, sender]):
+            app.logger.error("Password reset requested but SMTP environment variables are not configured.")
+            return jsonify({"error": "Password reset email is not configured yet. Please contact the StudyFlow administrator."}), 503
+        reset_url = request.host_url.rstrip("/") + "/?reset_token=" + quote_plus(token)
+        msg = EmailMessage()
+        msg["Subject"] = "Reset your StudyFlow AI password"
+        msg["From"] = sender
+        msg["To"] = user["email"]
+        msg.set_content("We received a request to reset your StudyFlow AI password. This link expires in 30 minutes and can be used once:\n\n" + reset_url + "\n\nIf you did not request this, ignore this email.")
+        try:
+            with smtplib.SMTP(smtp_host, smtp_port, timeout=15) as server:
+                server.starttls()
+                server.login(smtp_user, smtp_password)
+                server.send_message(msg)
+        except Exception:
+            app.logger.exception("Failed to send password reset email")
+            return jsonify({"error": "Could not send the reset email right now. Please try again later."}), 502
+    return jsonify({"message": "If an account exists for that email, a password reset link has been sent."})
+
+
+@app.post("/api/auth/reset-password")
+def reset_password():
+    d = request.get_json(silent=True) or {}
+    token = (d.get("token") or "").strip()
+    password = d.get("password") or ""
+    if len(password) < 8:
+        return jsonify({"error": "New password must contain at least 8 characters."}), 400
+    if not token:
+        return jsonify({"error": "This reset link is invalid. Request a new one."}), 400
+    token_hash = hashlib.sha256(token.encode("utf-8")).hexdigest()
+    now = int(datetime.now(timezone.utc).timestamp())
+    with get_db() as db:
+        row = db.execute("SELECT user_id FROM password_reset_tokens WHERE token_hash = ? AND expires_at > ?", (token_hash, now)).fetchone()
+        if not row:
+            return jsonify({"error": "This reset link is expired or already used. Request a new one."}), 400
+        db.execute("UPDATE users SET password_hash = ? WHERE id = ?", (generate_password_hash(password), row["user_id"]))
+        db.execute("DELETE FROM password_reset_tokens WHERE token_hash = ?", (token_hash,))
+    session.clear()
+    return jsonify({"message": "Password reset successfully. Please log in with your new password."})
+
+
+@app.get("/api/auth/config")
+def auth_config():
+    return jsonify({"google_client_id": os.getenv("GOOGLE_CLIENT_ID", "").strip()})
+
+
+@app.post("/api/auth/google")
+def google_login():
+    d = request.get_json(silent=True) or {}
+    credential = (d.get("credential") or "").strip()
+    client_id = os.getenv("GOOGLE_CLIENT_ID", "").strip()
+    if not client_id:
+        return jsonify({"error": "Google sign-in is not configured yet. The administrator must add GOOGLE_CLIENT_ID in Render."}), 503
+    if not credential:
+        return jsonify({"error": "Google did not return a sign-in credential. Please try again."}), 400
+    try:
+        from google.oauth2 import id_token
+        from google.auth.transport import requests as google_requests
+        claims = id_token.verify_oauth2_token(credential, google_requests.Request(), client_id)
+        email = (claims.get("email") or "").strip().lower()
+        if not claims.get("email_verified") or not email:
+            return jsonify({"error": "Google must verify your email address before you can continue."}), 401
+        name = (claims.get("name") or email.split("@")[0] or "Student").strip()[:80]
+        with get_db() as db:
+            user = db.execute("SELECT id, name, email FROM users WHERE email = ?", (email,)).fetchone()
+            if user:
+                user_id, display_name = user["id"], user["name"]
+            else:
+                cur = db.execute("INSERT INTO users (name, email, password_hash) VALUES (?, ?, ?)", (name, email, generate_password_hash(secrets.token_urlsafe(48))))
+                user_id, display_name = cur.lastrowid, name
+        session.clear()
+        session["user_id"] = user_id
+        session["user_name"] = display_name
+        session.permanent = True
+        return jsonify({"user": {"id": user_id, "name": display_name, "email": email}})
+    except ValueError:
+        return jsonify({"error": "Google sign-in token is invalid or expired. Please try again."}), 401
+    except Exception:
+        app.logger.exception("Google sign-in failed")
+        return jsonify({"error": "Google sign-in failed. Please try again later."}), 502
+
+
+@app.get("/reset-password")
+def reset_password_page():
+    return send_from_directory(app.static_folder, "index.html")
 
 
 @app.get("/api/auth/me")
