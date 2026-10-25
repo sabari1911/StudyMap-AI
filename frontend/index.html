@@ -19,15 +19,17 @@ h1{font:800 clamp(29px,4.2vw,43px)/1.2 'Plus Jakarta Sans',sans-serif;letter-spa
 .panel{display:none;background:var(--card);border:1px solid #e0e5f5;border-radius:20px;padding:25px;box-shadow:var(--shadow);margin-bottom:18px}.panel.active{display:block}.panel h2{font:700 21px 'Plus Jakarta Sans',sans-serif;letter-spacing:-.5px;margin:0 0 6px}.intro{color:var(--muted);margin:0 0 16px}.form-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.field{background:white;border:1px solid #ccd6f1;border-radius:12px;padding:12px 14px;color:var(--ink);min-width:0;flex:1;outline:none}.field:focus{border-color:#8e86ff;box-shadow:0 0 0 3px #5145ed12}.select{min-width:185px}.check{display:flex;align-items:center;gap:7px;white-space:nowrap;color:#4d5a79;font-weight:600}.btn{border:0;border-radius:11px;padding:12px 18px;background:#ffb13f;color:#1d2a49;font-weight:800;box-shadow:0 5px 12px #f5a72c21}.btn:hover{filter:brightness(.98);transform:translateY(-1px)}.btn-purple{background:var(--purple);color:white}.btn-soft{background:#f0efff;color:var(--purple);box-shadow:none}
 .results{margin-top:16px}.resource{padding:15px 0;border-top:1px solid #e8ebf6}.resource:first-child{margin-top:3px}.resource a{color:#168eab;font-weight:700;text-decoration:none}.resource a:hover{text-decoration:underline}.meta{font-size:12px;color:#71809f;margin:3px 0}.note{color:#4e5b79;font-size:13px}.empty{padding:14px;border-radius:12px;background:#f7f8ff;color:#6b7692}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:17px}.mini-card{border:1px solid #e4e8f6;border-radius:14px;padding:16px;background:#fff}.mini-card h3{font-size:15px;margin:0 0 7px}.mini-card p{font-size:13px;color:var(--muted);margin:0 0 12px}.mini-card a{color:#5145ed;font-size:13px;font-weight:700;text-decoration:none}.output{margin-top:16px;background:#f7f8ff;border:1px solid #e8eafb;border-radius:12px;padding:16px;white-space:pre-wrap}.task{display:flex;gap:10px;padding:12px 0;border-top:1px solid #e8ebf6}.task input{margin-top:5px}.task span{color:#4c5978}.foot{text-align:center;color:#8290ac;font-size:12px;padding:12px}
 @media(max-width:650px){.wrap{padding:20px 13px 35px}.hero{padding-top:8px}h1{letter-spacing:-1px}.hero p{font-size:15px}.panel{padding:18px;border-radius:16px}.form-row>*{width:100%}.check{width:auto}.btn{width:100%}.stat{min-width:calc(33.3% - 10px);padding:10px 9px}.stat strong{font-size:20px}.stat span{font-size:11px}.pill{padding:9px 12px;font-size:13px}}
+
+.account-actions{position:absolute;top:24px;right:24px;display:flex;gap:8px}.account-btn{border:1px solid #dce2f6;background:#ffffffd9;color:#5145ed;border-radius:999px;padding:9px 15px;font-weight:700}.account-btn.primary{background:#5145ed;color:#fff;border-color:#5145ed}.account-status{display:none;margin:0 auto 12px;max-width:520px;background:#ffffffd9;border:1px solid #dce3f6;padding:8px 14px;border-radius:999px;color:#4f5b7b;font-size:13px}.auth-overlay{position:fixed;inset:0;background:#15204499;backdrop-filter:blur(6px);z-index:99;display:none;align-items:center;justify-content:center;padding:18px}.auth-overlay.open{display:flex}.auth-card{position:relative;background:#fff;border-radius:22px;padding:28px;width:min(100%,430px);box-shadow:0 24px 90px #111a3d40}.auth-card h2{margin:0 0 5px;font:800 25px 'Plus Jakarta Sans',sans-serif}.auth-card p{color:#697493;margin:0 0 18px}.auth-card .field{width:100%;display:block;margin:10px 0}.auth-close{position:absolute;right:16px;top:12px;border:0;background:transparent;font-size:25px;color:#697493}.auth-switch{font-size:13px;margin-top:15px!important}.auth-switch button{border:0;background:none;color:#5145ed;font-weight:800}.auth-error{color:#b42318;background:#fff0ef;padding:9px 11px;border-radius:10px;font-size:13px;margin:10px 0;display:none}.account-actions{z-index:2}@media(max-width:650px){.account-actions{position:static;justify-content:center;margin:0 0 10px}.hero{padding-top:4px}}
 </style>
 </head>
 <body>
-<div class="wrap">
+<div class="wrap">\n<div class="account-actions"><button class="account-btn" id="openLogin">Log in</button><button class="account-btn primary" id="openRegister">Create account</button></div>
 <header class="hero">
   <div class="badge">✨ Free-first · Tamil &amp; English · Built for students</div>
   <h1>Learn smarter with <span class="gradient-text">StudyFlow AI</span></h1>
   <p>Find free courses with certificates, build a study plan, practise with quizzes, and find internships and learning centres near you.</p>
-  <div class="stats">
+  <div class="account-status" id="accountStatus"></div><div class="stats">
     <div class="stat"><strong>110+</strong><span>curated resources</span></div>
     <div class="stat"><strong>8</strong><span>career roadmaps</span></div>
     <div class="stat"><strong>₹0</strong><span>to get started</span></div>
@@ -71,7 +73,19 @@ h1{font:800 clamp(29px,4.2vw,43px)/1.2 'Plus Jakarta Sans',sans-serif;letter-spa
  <h2>Quick notes &amp; practice quiz</h2><p class="intro">Save your own notes in this browser and practise with a quick self-check.</p><textarea class="field" id="notesText" style="width:100%;min-height:110px" placeholder="Write your topic notes here..."></textarea><div class="form-row" style="margin-top:10px"><button class="btn btn-purple" id="saveNotes">Save notes</button><button class="btn btn-soft" id="quizBtn">Quick quiz: Python basics</button></div><div class="output" id="notesOut" hidden></div>
 </section>
 </main>
-<div class="foot">StudyFlow AI · Learn at your pace · Always verify course and internship details with the official provider.</div>
+
+<div class="auth-overlay" id="authOverlay" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+ <div class="auth-card"><button class="auth-close" id="authClose" aria-label="Close">×</button>
+ <h2 id="authTitle">Welcome to StudyFlow</h2><p id="authIntro">Create your free student account to personalise your learning space.</p>
+ <form id="authForm"><div id="nameField"><input class="field" id="authName" autocomplete="name" placeholder="Your full name" required minlength="2"></div>
+ <input class="field" id="authEmail" type="email" autocomplete="email" placeholder="Email address" required>
+ <input class="field" id="authPassword" type="password" autocomplete="current-password" placeholder="Password (at least 8 characters)" required minlength="8">
+ <div class="auth-error" id="authError" role="alert"></div><button class="btn btn-purple" id="authSubmit" style="width:100%;margin-top:5px">Create free account</button></form>
+ <p class="auth-switch" id="authSwitch">Already have an account? <button type="button" id="switchLogin">Log in</button></p>
+ <p style="font-size:11px;margin:14px 0 0">Prototype account system. Use an email and password you can safely manage; never reuse your important password.</p>
+ </div>
+</div>
+\n<div class="foot">StudyFlow AI · Learn at your pace · Always verify course and internship details with the official provider.</div>
 </div>
 <script>
 const $=id=>document.getElementById(id);
@@ -91,7 +105,15 @@ $('showRoad').onclick=async()=>{try{const d=await api('/api/roadmap?goal='+encod
 $('saveNotes').onclick=()=>{localStorage.setItem('studyflow-notes',$('notesText').value);$('notesOut').hidden=false;$('notesOut').textContent='Your notes are saved in this browser.'};
 $('notesText').value=localStorage.getItem('studyflow-notes')||'';
 $('quizBtn').onclick=()=>{const out=$('notesOut');out.hidden=false;out.innerHTML='';out.textContent='Quick quiz — Python basics\n1. Which keyword defines a function in Python? (Answer: def)\n2. Which data type stores True or False? (Answer: bool)\n3. What does len([1, 2, 3]) return? (Answer: 3)';};
-loadRoadmaps();findRes();
+loadRoadmaps();findRes();\n
+const authOverlay=$('authOverlay');let authMode='register';let currentUser=null;
+function setAuthMode(mode){authMode=mode;const reg=mode==='register';$('authTitle').textContent=reg?'Create your free account':'Welcome back';$('authIntro').textContent=reg?'Create your free student account to personalise your learning space.':'Log in to continue your StudyFlow journey.';$('nameField').style.display=reg?'block':'none';$('authName').required=reg;$('authPassword').autocomplete=reg?'new-password':'current-password';$('authSubmit').textContent=reg?'Create free account':'Log in';$('authSwitch').innerHTML=reg?'Already have an account? <button type="button" id="switchLogin">Log in</button>':'New to StudyFlow? <button type="button" id="switchRegister">Create account</button>';const sw=reg?$('switchLogin'):$('switchRegister');sw.onclick=()=>setAuthMode(reg?'login':'register');$('authError').style.display='none'}
+function openAuth(mode){setAuthMode(mode);authOverlay.classList.add('open');setTimeout(()=>(mode==='register'&&$('authName').required)?$('authName').focus():$('authEmail').focus(),50)}
+$('openLogin').onclick=()=>openAuth('login');$('openRegister').onclick=()=>openAuth('register');$('authClose').onclick=()=>authOverlay.classList.remove('open');authOverlay.addEventListener('click',e=>{if(e.target===authOverlay)authOverlay.classList.remove('open')});document.addEventListener('keydown',e=>{if(e.key==='Escape')authOverlay.classList.remove('open')});
+$('authForm').addEventListener('submit',async e=>{e.preventDefault();const err=$('authError'),btn=$('authSubmit');err.style.display='none';btn.disabled=true;btn.textContent='Please wait…';try{const d=await api(authMode==='register'?'/api/auth/register':'/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({name:$('authName').value,email:$('authEmail').value,password:$('authPassword').value})});currentUser=d.user;authOverlay.classList.remove('open');renderAuthUser()}catch(ex){err.textContent=ex.message;err.style.display='block'}finally{btn.disabled=false;btn.textContent=authMode==='register'?'Create free account':'Log in'}});
+function renderAuthUser(){if(!currentUser){$('accountStatus').style.display='none';$('openLogin').style.display='';$('openRegister').style.display='';return}$('accountStatus').style.display='block';$('accountStatus').textContent='✨ Welcome, '+currentUser.name+' — your learning journey starts here.';$('openLogin').style.display='none';$('openRegister').textContent='Log out';$('openRegister').onclick=async()=>{try{await api('/api/auth/logout',{method:'POST',credentials:'same-origin'})}catch{}currentUser=null;$('openRegister').textContent='Create account';$('openRegister').onclick=()=>openAuth('register');renderAuthUser()}}
+api('/api/auth/me',{credentials:'same-origin'}).then(d=>{if(d.user){currentUser=d.user;renderAuthUser()}}).catch(()=>{});
+
 </script>
 </body>
 </html>
