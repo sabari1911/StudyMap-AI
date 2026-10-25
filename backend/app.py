@@ -6,6 +6,7 @@ from urllib.parse import quote_plus
 from pathlib import Path
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask import Flask, jsonify, request, send_from_directory, session
+from werkzeug.utils import secure_filename
 from flask_cors import CORS
 from dotenv import load_dotenv
 
@@ -14,7 +15,7 @@ ROOT = Path(__file__).resolve().parent.parent
 DATA = Path(__file__).parent / "data"
 app = Flask(__name__, static_folder=str(ROOT / "frontend"), static_url_path="")
 app.secret_key = os.getenv("FLASK_SECRET_KEY") or secrets.token_hex(32)
-app.config.update(SESSION_COOKIE_HTTPONLY=True, SESSION_COOKIE_SAMESITE="Lax", SESSION_COOKIE_SECURE=bool(os.getenv("RENDER")), PERMANENT_SESSION_LIFETIME=timedelta(days=7))
+app.config.update(SESSION_COOKIE_HTTPONLY=True, SESSION_COOKIE_SAMESITE="Lax", SESSION_COOKIE_SECURE=bool(os.getenv("RENDER")), PERMANENT_SESSION_LIFETIME=timedelta(days=7), MAX_CONTENT_LENGTH=5 * 1024 * 1024)
 CORS(app, supports_credentials=True)
 DB_PATH = Path(os.getenv("STUDYFLOW_DB_PATH", str(DATA / "studyflow_users.db")))
 
@@ -24,6 +25,8 @@ def get_db():
     conn.row_factory = sqlite3.Row
     conn.execute("CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, email TEXT NOT NULL UNIQUE COLLATE NOCASE, password_hash TEXT NOT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)")
     conn.execute("CREATE TABLE IF NOT EXISTS password_reset_tokens (token_hash TEXT PRIMARY KEY, user_id INTEGER NOT NULL, expires_at INTEGER NOT NULL, FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE)")
+    conn.execute("CREATE TABLE IF NOT EXISTS user_profiles (user_id INTEGER PRIMARY KEY, profile_json TEXT NOT NULL DEFAULT '{}', updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE)")
+    conn.execute("CREATE TABLE IF NOT EXISTS user_documents (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, doc_type TEXT NOT NULL, title TEXT NOT NULL, stored_name TEXT NOT NULL, original_name TEXT NOT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE)")
     return conn
 
 with get_db() as _db:
@@ -206,11 +209,116 @@ def reset_password_page():
     return send_from_directory(app.static_folder, "index.html")
 
 
+PROFILE_FIELDS = {"phone":25,"location":100,"language":30,"bio":1000,"college":150,"degree":120,"major":120,"year":40,"grade":30,"graduation":30,"skills":1500,"linkedin":300,"github":300,"portfolio":300}
+UPLOAD_DIR = ROOT / "uploads" / "student-documents"
+ALLOWED_DOCUMENT_EXTENSIONS = {".pdf", ".doc", ".docx", ".jpg", ".jpeg", ".png"}
+
+@app.route("/api/profile", methods=["GET", "PUT"])
+def student_profile():
+    user_id = session.get("user_id")
+    if not user_id:
+        return jsonify({"error": "Please log in to manage your student profile."}), 401
+    with get_db() as db:
+        user = db.execute("SELECT id, name, email FROM users WHERE id = ?", (user_id,)).fetchone()
+        if not user:
+            session.clear()
+            return jsonify({"error": "Account not found. Please log in again."}), 401
+        row = db.execute("SELECT profile_json FROM user_profiles WHERE user_id = ?", (user_id,)).fetchone()
+        profile = json.loads(row["profile_json"]) if row else {}
+        if request.method == "PUT":
+            incoming = request.get_json(silent=True) or {}
+            for field, max_len in PROFILE_FIELDS.items():
+                if field in incoming:
+                    value = incoming[field]
+                    if not isinstance(value, str):
+                        return jsonify({"error": "Profile fields must be text."}), 400
+                    value = value.strip()
+                    if len(value) > max_len:
+                        return jsonify({"error": field.capitalize() + " is too long."}), 400
+                    if field in {"linkedin", "github", "portfolio"} and value and not re.match(r"^https://", value, re.I):
+                        return jsonify({"error": field.capitalize() + " link must begin with https://"}), 400
+                    profile[field] = value
+            if "name" in incoming:
+                name = (incoming.get("name") or "").strip()
+                if not 2 <= len(name) <= 80:
+                    return jsonify({"error": "Full name must contain 2–80 characters."}), 400
+                db.execute("UPDATE users SET name = ? WHERE id = ?", (name, user_id))
+                session["user_name"] = name
+                user = db.execute("SELECT id, name, email FROM users WHERE id = ?", (user_id,)).fetchone()
+            db.execute("INSERT INTO user_profiles (user_id, profile_json, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP) ON CONFLICT(user_id) DO UPDATE SET profile_json = excluded.profile_json, updated_at = CURRENT_TIMESTAMP", (user_id, json.dumps(profile, ensure_ascii=False)))
+    return jsonify({"user": {"id": user["id"], "name": user["name"], "email": user["email"]}, "profile": profile})
+
+
+@app.route("/api/documents", methods=["GET", "POST"])
+def student_documents():
+    user_id = session.get("user_id")
+    if not user_id:
+        return jsonify({"error": "Please log in to manage your resume and certificates."}), 401
+    if request.method == "GET":
+        with get_db() as db:
+            rows = db.execute("SELECT id, doc_type, title, original_name, created_at FROM user_documents WHERE user_id = ? ORDER BY created_at DESC, id DESC", (user_id,)).fetchall()
+        return jsonify([{"id": r["id"], "type": r["doc_type"], "title": r["title"], "filename": r["original_name"], "created_at": r["created_at"]} for r in rows])
+    uploaded = request.files.get("file")
+    doc_type = (request.form.get("doc_type") or "other").strip().lower()
+    title = (request.form.get("title") or "").strip()[:120]
+    if doc_type not in {"resume", "certificate", "other"}:
+        return jsonify({"error": "Choose a valid document type."}), 400
+    if not uploaded or not uploaded.filename:
+        return jsonify({"error": "Choose a file before uploading."}), 400
+    original = secure_filename(uploaded.filename)
+    ext = Path(original).suffix.lower()
+    if not original or ext not in ALLOWED_DOCUMENT_EXTENSIONS:
+        return jsonify({"error": "Allowed formats: PDF, DOC, DOCX, JPG and PNG."}), 400
+    title = title or Path(original).stem[:120] or "Student document"
+    stored = secrets.token_hex(16) + ext
+    user_dir = UPLOAD_DIR / str(user_id)
+    user_dir.mkdir(parents=True, exist_ok=True)
+    uploaded.save(user_dir / stored)
+    with get_db() as db:
+        cur = db.execute("INSERT INTO user_documents (user_id, doc_type, title, stored_name, original_name) VALUES (?, ?, ?, ?, ?)", (user_id, doc_type, title, stored, original))
+        doc_id = cur.lastrowid
+    return jsonify({"id": doc_id, "type": doc_type, "title": title, "filename": original}), 201
+
+
+@app.get("/api/documents/<int:document_id>/download")
+def download_student_document(document_id):
+    user_id = session.get("user_id")
+    if not user_id:
+        return jsonify({"error": "Please log in to download your documents."}), 401
+    with get_db() as db:
+        row = db.execute("SELECT stored_name, original_name FROM user_documents WHERE id = ? AND user_id = ?", (document_id, user_id)).fetchone()
+    if not row:
+        return jsonify({"error": "Document not found."}), 404
+    return send_from_directory(UPLOAD_DIR / str(user_id), row["stored_name"], as_attachment=True, download_name=row["original_name"])
+
+
+@app.delete("/api/documents/<int:document_id>")
+def delete_student_document(document_id):
+    user_id = session.get("user_id")
+    if not user_id:
+        return jsonify({"error": "Please log in to manage your documents."}), 401
+    with get_db() as db:
+        row = db.execute("SELECT stored_name FROM user_documents WHERE id = ? AND user_id = ?", (document_id, user_id)).fetchone()
+        if not row:
+            return jsonify({"error": "Document not found."}), 404
+        db.execute("DELETE FROM user_documents WHERE id = ? AND user_id = ?", (document_id, user_id))
+    try:
+        (UPLOAD_DIR / str(user_id) / row["stored_name"]).unlink(missing_ok=True)
+    except OSError:
+        app.logger.exception("Could not remove uploaded student document")
+    return jsonify({"ok": True})
+
+
 @app.get("/api/auth/me")
 def auth_me():
     if not session.get("user_id"):
         return jsonify({"user": None})
-    return jsonify({"user": {"id": session["user_id"], "name": session.get("user_name", "Student")}})
+    with get_db() as db:
+        user = db.execute("SELECT id, name, email FROM users WHERE id = ?", (session["user_id"],)).fetchone()
+    if not user:
+        session.clear()
+        return jsonify({"user": None})
+    return jsonify({"user": {"id": user["id"], "name": user["name"], "email": user["email"]}})
 
 
 @app.post("/api/auth/logout")
