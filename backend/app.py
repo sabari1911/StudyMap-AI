@@ -18,6 +18,7 @@ app.secret_key = os.getenv("FLASK_SECRET_KEY") or secrets.token_hex(32)
 app.config.update(SESSION_COOKIE_HTTPONLY=True, SESSION_COOKIE_SAMESITE="Lax", SESSION_COOKIE_SECURE=bool(os.getenv("RENDER")), PERMANENT_SESSION_LIFETIME=timedelta(days=7), MAX_CONTENT_LENGTH=5 * 1024 * 1024)
 CORS(app, supports_credentials=True)
 DB_PATH = Path(os.getenv("STUDYFLOW_DB_PATH", str(DATA / "studyflow_users.db")))
+UPLOAD_DIR = Path(os.getenv("STUDYFLOW_UPLOAD_DIR", str(ROOT / "uploads" / "student-documents")))
 
 def get_db():
     DB_PATH.parent.mkdir(parents=True, exist_ok=True)
@@ -27,6 +28,7 @@ def get_db():
     conn.execute("CREATE TABLE IF NOT EXISTS password_reset_tokens (token_hash TEXT PRIMARY KEY, user_id INTEGER NOT NULL, expires_at INTEGER NOT NULL, FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE)")
     conn.execute("CREATE TABLE IF NOT EXISTS user_profiles (user_id INTEGER PRIMARY KEY, profile_json TEXT NOT NULL DEFAULT '{}', updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE)")
     conn.execute("CREATE TABLE IF NOT EXISTS user_documents (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, doc_type TEXT NOT NULL, title TEXT NOT NULL, stored_name TEXT NOT NULL, original_name TEXT NOT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE)")
+    conn.execute("CREATE TABLE IF NOT EXISTS user_notes (user_id INTEGER PRIMARY KEY, notes_text TEXT NOT NULL DEFAULT '', updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE)")
     return conn
 
 with get_db() as _db:
@@ -210,7 +212,6 @@ def reset_password_page():
 
 
 PROFILE_FIELDS = {"phone":25,"location":100,"language":30,"bio":1000,"college":150,"degree":120,"major":120,"year":40,"grade":30,"graduation":30,"skills":1500,"linkedin":300,"github":300,"portfolio":300}
-UPLOAD_DIR = ROOT / "uploads" / "student-documents"
 ALLOWED_DOCUMENT_EXTENSIONS = {".pdf", ".doc", ".docx", ".jpg", ".jpeg", ".png"}
 
 @app.route("/api/profile", methods=["GET", "PUT"])
@@ -247,6 +248,29 @@ def student_profile():
                 user = db.execute("SELECT id, name, email FROM users WHERE id = ?", (user_id,)).fetchone()
             db.execute("INSERT INTO user_profiles (user_id, profile_json, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP) ON CONFLICT(user_id) DO UPDATE SET profile_json = excluded.profile_json, updated_at = CURRENT_TIMESTAMP", (user_id, json.dumps(profile, ensure_ascii=False)))
     return jsonify({"user": {"id": user["id"], "name": user["name"], "email": user["email"]}, "profile": profile})
+
+
+@app.route("/api/notes", methods=["GET", "PUT"])
+def student_notes():
+    user_id = session.get("user_id")
+    if not user_id:
+        return jsonify({"error": "Please log in to save and sync your notes."}), 401
+    with get_db() as db:
+        if request.method == "GET":
+            row = db.execute("SELECT notes_text, updated_at FROM user_notes WHERE user_id = ?", (user_id,)).fetchone()
+            return jsonify({"notes": row["notes_text"] if row else "", "updated_at": row["updated_at"] if row else None})
+        payload = request.get_json(silent=True) or {}
+        notes = payload.get("notes", "")
+        if not isinstance(notes, str):
+            return jsonify({"error": "Notes must be text."}), 400
+        if len(notes) > 50000:
+            return jsonify({"error": "Notes are too long. Please keep them under 50,000 characters."}), 413
+        db.execute(
+            "INSERT INTO user_notes (user_id, notes_text, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP) "
+            "ON CONFLICT(user_id) DO UPDATE SET notes_text = excluded.notes_text, updated_at = CURRENT_TIMESTAMP",
+            (user_id, notes),
+        )
+    return jsonify({"ok": True, "message": "Notes saved to your account."})
 
 
 @app.route("/api/documents", methods=["GET", "POST"])
