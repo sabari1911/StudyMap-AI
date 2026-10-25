@@ -414,6 +414,53 @@ def nearby():
                     "google": f"https://www.google.com/maps/search/{q}"})
 
 
+@app.post("/api/quiz")
+def generate_quiz():
+    d = request.get_json(silent=True) or {}
+    topic = (d.get("topic") or "").strip()[:300]
+    notes = (d.get("notes") or "").strip()[:5000]
+    try:
+        count = int(d.get("count", 5))
+    except (TypeError, ValueError):
+        count = 5
+    count = max(1, min(count, 20))
+    difficulty = (d.get("difficulty") or "Mixed").strip()
+    language = (d.get("language") or "English").strip()
+    if not topic and not notes:
+        return jsonify({"error": "Enter a quiz topic or write some notes first."}), 400
+    key = (os.getenv("GEMINI_API_KEY") or "").strip()
+    if not key:
+        return jsonify({"error": "AI Quiz is not configured. Add GEMINI_API_KEY in Render Environment."}), 503
+    prompt = ("Create a student practice quiz. Return ONLY valid JSON with schema "
+        '{"title":"short title","questions":[{"question":"...","options":["A","B","C","D"],"answer":0,"explanation":"short explanation"}]}. '
+        f"Generate exactly {count} multiple-choice questions, each with exactly 4 options and answer as zero-based integer 0-3. "
+        f"Do not repeat questions. Topic: {topic or 'derive from supplied notes'}. Difficulty: {difficulty}. Language: {language}. "
+        f"Use these notes as the main source when provided: {notes or 'No notes supplied.'}")
+    try:
+        from google import genai
+        from google.genai import types
+        client = genai.Client(api_key=key)
+        response = client.models.generate_content(
+            model=os.getenv("GEMINI_MODEL", "gemini-2.5-flash"),
+            contents=prompt,
+            config=types.GenerateContentConfig(response_mime_type="application/json", max_output_tokens=min(7000, 400 + count * 300)),
+        )
+        quiz = json.loads((response.text or "").strip())
+        questions = quiz.get("questions", [])
+        if not isinstance(questions, list) or len(questions) != count:
+            raise ValueError("Generated quiz question count was invalid.")
+        clean = []
+        for item in questions:
+            options, answer = item.get("options"), item.get("answer")
+            if not isinstance(item.get("question"), str) or not isinstance(options, list) or len(options) != 4 or not isinstance(answer, int) or answer not in range(4):
+                raise ValueError("Generated quiz format was invalid.")
+            clean.append({"question": item["question"][:500], "options": [str(x)[:250] for x in options], "answer": answer, "explanation": str(item.get("explanation", ""))[:700]})
+        return jsonify({"title": str(quiz.get("title") or topic or "Practice quiz")[:120], "questions": clean})
+    except Exception:
+        app.logger.exception("AI quiz generation failed")
+        return jsonify({"error": "Could not generate the quiz. Check Render Logs and confirm GEMINI_API_KEY and GEMINI_MODEL=gemini-2.5-flash."}), 502
+
+
 @app.post("/api/ask")
 def ask():
     d = request.get_json(force=True)
@@ -430,7 +477,7 @@ def ask():
 
         client = genai.Client(api_key=key)
         response = client.models.generate_content(
-            model=os.getenv("GEMINI_MODEL", "gemini-3.8-flash"),
+            model=os.getenv("GEMINI_MODEL", "gemini-2.5-flash"),
             contents=f"Answer in {language}.\\n\\n{question}",
             config=types.GenerateContentConfig(
                 system_instruction=SYSTEM_PROMPT,
@@ -447,7 +494,8 @@ def ask():
             return jsonify({"error": "Gemini could not authenticate this key. Check that GEMINI_API_KEY in Render contains a valid Gemini API key, then redeploy."}), 502
         if "429" in message or "quota" in message or "resource_exhausted" in message:
             return jsonify({"error": "Gemini free-tier quota or rate limit reached. Wait and try again later, or check your model and quota in Google AI Studio."}), 502
-        return jsonify({"error": "Gemini AI Tutor request failed. Check the Render logs and confirm the selected Gemini model is available for your API key."}), 502
+        app.logger.exception("Gemini AI Tutor request failed")
+        return jsonify({"error": "Gemini AI Tutor request failed. In Render, check GEMINI_API_KEY and set GEMINI_MODEL to gemini-2.5-flash, then inspect Render Logs."}), 502
 
 
 if __name__ == "__main__":
