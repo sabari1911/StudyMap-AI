@@ -15,7 +15,7 @@ ROOT = Path(__file__).resolve().parent.parent
 DATA = Path(__file__).parent / "data"
 app = Flask(__name__, static_folder=str(ROOT / "frontend"), static_url_path="")
 app.secret_key = os.getenv("FLASK_SECRET_KEY") or secrets.token_hex(32)
-app.config.update(SESSION_COOKIE_HTTPONLY=True, SESSION_COOKIE_SAMESITE="Lax", SESSION_COOKIE_SECURE=bool(os.getenv("RENDER")), PERMANENT_SESSION_LIFETIME=timedelta(days=7), MAX_CONTENT_LENGTH=5 * 1024 * 1024)
+app.config.update(SESSION_COOKIE_HTTPONLY=True, SESSION_COOKIE_SAMESITE="Lax", SESSION_COOKIE_SECURE=bool(os.getenv("RENDER")), PERMANENT_SESSION_LIFETIME=timedelta(days=7), MAX_CONTENT_LENGTH=11 * 1024 * 1024)
 CORS(app, supports_credentials=True)
 # Render's filesystem is temporary unless a persistent disk is mounted.
 # Configure a Render persistent disk at /var/data to keep this database and uploads.
@@ -219,7 +219,7 @@ def reset_password_page():
     return send_from_directory(app.static_folder, "index.html")
 
 
-PROFILE_FIELDS = {"phone":25,"location":100,"language":30,"bio":1000,"college":150,"degree":120,"major":120,"year":40,"grade":30,"graduation":30,"skills":1500,"linkedin":300,"github":300,"portfolio":300}
+PROFILE_FIELDS = {"firstName":60,"lastName":60,"username":30,"age":3,"dob":10,"phone":25,"gender":40,"userType":50,"domain":120,"course":100,"specialization":150,"courseStartYear":4,"courseEndYear":4,"organization":180,"location":150,"purpose":1000,"bio":1000,"skills":5000,"educationQualification":80,"educationCourse":150,"educationSpecialization":150,"educationCollege":180,"educationStartYear":4,"educationEndYear":4,"educationCourseType":60,"educationPercentage":20,"educationCgpa":20,"educationRollNumber":60,"educationLateralEntry":10,"educationSkills":1000,"educationDescription":2000,"workDesignation":120,"workOrganisation":180,"workEmploymentType":60,"workStartDate":10,"workEndDate":10,"workLocation":150,"workSkills":1500,"workDescription":3000,"accomplishments":5000,"pronouns":40,"personalDob":10,"currentAddress":300,"permanentAddress":300,"hobbies":1000,"linkedin":300,"facebook":300,"instagram":300,"twitter":300,"github":300,"medium":300,"reddit":300,"slack":300,"dribbble":300,"behance":300,"codepen":300,"figma":300,"portfolio":300,"language":30,"college":150,"degree":120,"major":120,"year":40,"grade":30,"graduation":30}
 ALLOWED_DOCUMENT_EXTENSIONS = {".pdf", ".doc", ".docx", ".jpg", ".jpeg", ".png"}
 
 @app.route("/api/profile", methods=["GET", "PUT"])
@@ -247,6 +247,27 @@ def student_profile():
                     if field in {"linkedin", "github", "portfolio"} and value and not re.match(r"^https://", value, re.I):
                         return jsonify({"error": field.capitalize() + " link must begin with https://"}), 400
                     profile[field] = value
+            if "username" in incoming:
+                username = profile.get("username", "")
+                if username and not re.fullmatch(r"[A-Za-z0-9_.]{3,30}", username):
+                    return jsonify({"error": "Username must be 3–30 characters using letters, numbers, underscores or dots."}), 400
+                if username:
+                    rows = db.execute("SELECT user_id, profile_json FROM user_profiles WHERE user_id != ?", (user_id,)).fetchall()
+                    for existing in rows:
+                        try:
+                            existing_profile = json.loads(existing["profile_json"])
+                        except (TypeError, json.JSONDecodeError):
+                            continue
+                        if str(existing_profile.get("username", "")).casefold() == username.casefold():
+                            return jsonify({"error": "That username is already taken. Please choose another."}), 409
+            if "firstName" in incoming or "lastName" in incoming:
+                first = profile.get("firstName", "").strip()
+                last = profile.get("lastName", "").strip()
+                full_name = (first + " " + last).strip()
+                if len(full_name) >= 2:
+                    db.execute("UPDATE users SET name = ? WHERE id = ?", (full_name[:80], user_id))
+                    session["user_name"] = full_name[:80]
+                    user = db.execute("SELECT id, name, email FROM users WHERE id = ?", (user_id,)).fetchone()
             if "name" in incoming:
                 name = (incoming.get("name") or "").strip()
                 if not 2 <= len(name) <= 80:
@@ -297,6 +318,8 @@ def student_documents():
         return jsonify({"error": "Choose a valid document type."}), 400
     if not uploaded or not uploaded.filename:
         return jsonify({"error": "Choose a file before uploading."}), 400
+    if request.content_length and request.content_length > 10 * 1024 * 1024 + 128 * 1024:
+        return jsonify({"error": "Files must be 10 MB or smaller."}), 413
     original = secure_filename(uploaded.filename)
     ext = Path(original).suffix.lower()
     if not original or ext not in ALLOWED_DOCUMENT_EXTENSIONS:
