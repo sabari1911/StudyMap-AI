@@ -17,8 +17,16 @@ app = Flask(__name__, static_folder=str(ROOT / "frontend"), static_url_path="")
 app.secret_key = os.getenv("FLASK_SECRET_KEY") or secrets.token_hex(32)
 app.config.update(SESSION_COOKIE_HTTPONLY=True, SESSION_COOKIE_SAMESITE="Lax", SESSION_COOKIE_SECURE=bool(os.getenv("RENDER")), PERMANENT_SESSION_LIFETIME=timedelta(days=7), MAX_CONTENT_LENGTH=5 * 1024 * 1024)
 CORS(app, supports_credentials=True)
-DB_PATH = Path(os.getenv("STUDYFLOW_DB_PATH", str(DATA / "studyflow_users.db")))
-UPLOAD_DIR = Path(os.getenv("STUDYFLOW_UPLOAD_DIR", str(ROOT / "uploads" / "student-documents")))
+# Render's filesystem is temporary unless a persistent disk is mounted.
+# Configure a Render persistent disk at /var/data to keep this database and uploads.
+RENDER_DISK_DIR = Path("/var/data")
+DEFAULT_STORAGE_DIR = RENDER_DISK_DIR if os.getenv("RENDER") else DATA
+DEFAULT_UPLOAD_DIR = RENDER_DISK_DIR / "student-documents" if os.getenv("RENDER") else ROOT / "uploads" / "student-documents"
+DB_PATH = Path(os.getenv("STUDYFLOW_DB_PATH", str(DEFAULT_STORAGE_DIR / "studyflow_users.db")))
+UPLOAD_DIR = Path(os.getenv("STUDYFLOW_UPLOAD_DIR", str(DEFAULT_UPLOAD_DIR)))
+
+if os.getenv("RENDER") and not os.getenv("FLASK_SECRET_KEY"):
+    app.logger.warning("FLASK_SECRET_KEY is not configured. Sessions may be invalidated after a restart; set a stable secret in Render Environment.")
 
 def get_db():
     DB_PATH.parent.mkdir(parents=True, exist_ok=True)
