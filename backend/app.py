@@ -31,11 +31,18 @@ RESOURCES = json.loads((DATA / "resources.json").read_text(encoding="utf-8"))
 ROADMAPS = json.loads((DATA / "roadmaps.json").read_text(encoding="utf-8"))
 
 PHASES = {
-    "python": ["Variables, data types, operators", "Conditions and loops", "Functions and data structures",
-               "Object-oriented programming", "File handling and libraries", "Build a practical project"],
+    "python": ["Set up Python; variables, types and input/output", "Conditions, loops and problem-solving", "Functions, lists, tuples and dictionaries", "Strings, files, exceptions and modules", "OOP, classes and simple libraries", "Build a small project and revise with a quiz"],
+    "web development": ["HTML structure and semantic elements", "CSS layout, responsive design and accessibility", "JavaScript variables, functions and DOM events", "Forms, validation and browser storage", "Git and GitHub; publish a static website", "Build and deploy a portfolio project"],
+    "sql": ["Tables, rows, columns and SELECT", "WHERE, ORDER BY, LIMIT and filtering", "JOINs and relationships", "GROUP BY, aggregate functions and HAVING", "INSERT, UPDATE, DELETE and safe query habits", "Build a mini database project and practise queries"],
+    "machine learning": ["Python, NumPy/Pandas and basic statistics", "Prepare data and understand train/test splits", "Regression and classification basics", "Model evaluation and avoiding data leakage", "Use scikit-learn for a small experiment", "Document a mini project and explain its results"],
+    "data structures": ["Arrays, strings and time complexity basics", "Linked lists, stacks and queues", "Searching and sorting", "Hash tables, sets and maps", "Trees, graphs and traversal", "Solve practice problems and review complexity"],
+    "cybersecurity": ["Networking, operating systems and security ethics", "Passwords, MFA and account security", "Web security basics and common vulnerabilities", "Linux commands and log reading", "Practise in legal beginner labs only", "Create a defensive security checklist and report"],
+    "cloud": ["Cloud concepts and shared responsibility", "Compute, storage and networking basics", "Identity, access and cost controls", "Deploy a simple web application", "Monitoring, backups and reliability", "Document and review a small cloud project"],
+    "data analyst": ["Spreadsheet basics and data cleaning", "SQL queries and joins", "Python with Pandas", "Charts and dashboard fundamentals", "Statistics and explaining findings", "Create a portfolio analysis project"],
+    "ai engineer": ["Python and essential maths", "Data structures, statistics and data handling", "Machine learning fundamentals", "Neural networks and model evaluation", "Build a small AI application responsibly", "Portfolio, documentation and internship preparation"],
+    "iot developer": ["C/Python basics and electronics safety", "Microcontrollers and sensor readings", "Collect and clean sensor data", "Send data to a simple dashboard", "Add alerts and basic analytics", "Build and document an IoT prototype"]
 }
-GENERIC = ["Fundamentals and key terms", "Core concepts with examples", "Guided practice",
-           "Intermediate topics", "Mini project", "Review, quiz yourself, and plan next steps"]
+GENERIC = ["Learn the essential terms and setup the tools", "Understand the main concepts with worked examples", "Practise small exercises and check your answers", "Apply the concepts to a realistic problem", "Build a mini project and write down what you learned", "Review, take a quiz and plan the next skill"]
 
 SYSTEM_PROMPT = (
     "You are StudyFlow AI, a patient tutor for students. Reply in the language the student asks for "
@@ -143,7 +150,7 @@ def plan():
     topic = (d.get("topic") or "").strip() or "your topic"
     days = max(1, min(int(d.get("days", 30)), 180))
     hours = max(0.5, min(float(d.get("hours_per_day", 2)), 12))
-    phases = PHASES.get(topic.lower(), GENERIC)
+    phases = PHASES.get(topic.lower(), PHASES.get(next((k for k in PHASES if k in topic.lower()), ""), GENERIC))
     size = max(1, days // len(phases))
     items, start = [], 1
     for i, goal in enumerate(phases):
@@ -199,7 +206,8 @@ def ask():
         return jsonify({"error": "Ask a question first."}), 400
     key = os.getenv("ANTHROPIC_API_KEY")
     if not key:
-        return jsonify({"answer": "AI tutor is not set up. Add ANTHROPIC_API_KEY to your .env file and restart."})
+        topic = question[:100]
+        return jsonify({"answer": "The AI tutor connection is not configured yet, so here is a quick study fallback.\n\nQuestion: " + topic + "\n\nTry this learning method:\n1. Write down the key terms in your own words.\n2. Follow one beginner lesson from the course links.\n3. Practise with a small example and check the result.\n4. Ask a more specific question, such as “Explain Python loops with an example”.\n\nTo enable full AI answers, add your own ANTHROPIC_API_KEY as a secret environment variable in Render. Never put the key in frontend code or commit it to GitHub."})
     try:
         import anthropic
         client = anthropic.Anthropic(api_key=key)
