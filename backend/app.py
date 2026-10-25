@@ -107,14 +107,33 @@ def logout():
 def resources():
     q = request.args.get("q", "").lower().strip()
     free_only = request.args.get("free") == "1"
+    certificate_only = request.args.get("certificate") == "1"
+    level = request.args.get("level", "").lower().strip()
+    aliases = {
+        "web develop": "web development", "web": "web development",
+        "ai": "artificial intelligence", "ml": "machine learning",
+        "dsa": "data structures", "database": "sql", "data & sql": "sql",
+        "coding": "programming", "iot": "internet of things",
+        "cyber security": "cybersecurity", "tamil": "language"
+    }
+    q = aliases.get(q, q)
     out = []
-    for r in RESOURCES:
-        text = f'{r["title"]} {r["topic"]} {r["provider"]}'.lower()
-        if q and not any(w in text for w in q.split()):
+    for item in RESOURCES:
+        text = f'{item["title"]} {item["topic"]} {item["provider"]} {item.get("note", "")}'.lower()
+        words = [w for w in q.split() if len(w) > 1]
+        if q and not (all(w in text for w in words) or q in text or any(w in text for w in words)):
             continue
-        if free_only and not r["cost"].startswith("free"):
+        if free_only and not str(item.get("cost", "")).lower().startswith("free"):
             continue
-        out.append(r)
+        note = str(item.get("note", "")).lower()
+        is_free_certificate = "free certification" in note or "free certificate" in note or "free certificates" in note
+        if certificate_only and not is_free_certificate:
+            continue
+        item_level = str(item.get("level", "")).lower()
+        if level and level not in item_level and item_level != "all":
+            continue
+        out.append(item)
+    out.sort(key=lambda item: (0 if ("free certification" in str(item.get("note","")).lower() or "free certificate" in str(item.get("note","")).lower()) else 1, item.get("title","").lower()))
     return jsonify(out)
 
 
@@ -144,12 +163,19 @@ def roadmap():
 
 @app.get("/api/internships")
 def internships():
-    q = quote_plus(request.args.get("domain", "python").strip())
+    domain = request.args.get("domain", "python").strip() or "student"
+    location = request.args.get("location", "Remote").strip() or "Remote"
+    q = quote_plus(domain)
+    loc = quote_plus(location)
+    remote = location.lower() in {"remote", "work from home", "online"}
+    internshala = f"https://internshala.com/internships/keywords-{q}/" + ("" if remote else f"?locations={loc}")
+    linkedin = f"https://www.linkedin.com/jobs/search/?keywords={q}%20intern&location={loc}"
     return jsonify([
-        {"name": "Internshala", "url": f"https://internshala.com/internships/keywords-{q}/"},
+        {"name": "Internshala", "url": internshala},
         {"name": "AICTE Internship Portal", "url": "https://internship.aicte-india.org/"},
-        {"name": "LinkedIn Jobs", "url": f"https://www.linkedin.com/jobs/search/?keywords={q}%20intern"},
-        {"name": "Unstop", "url": "https://unstop.com/internships"},
+        {"name": "LinkedIn internships", "url": linkedin},
+        {"name": "Unstop internships", "url": "https://unstop.com/internships"},
+        {"name": "Google jobs search", "url": f"https://www.google.com/search?q={q}+internship+{loc}"},
     ])
 
 
