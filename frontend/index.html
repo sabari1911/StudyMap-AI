@@ -147,7 +147,19 @@ button,a,.chip{touch-action:manipulation}
 <script>
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-async function api(url,options){const r=await fetch(url,options);const data=await r.json();if(!r.ok)throw new Error(data.error||'Request failed. Please try again.');return data}
+async function api(url,options){
+ const r=await fetch(url,options);
+ const type=(r.headers.get('content-type')||'').toLowerCase();
+ let data;
+ if(type.includes('application/json')){
+  try{data=await r.json()}catch{throw new Error('The server returned invalid JSON. Please retry; if it continues, check the Render logs.')}
+ }else{
+  if(!r.ok)throw new Error('Server endpoint '+url+' returned HTTP '+r.status+' instead of JSON. Check that Render finished deploying the latest backend code.');
+  throw new Error('The server returned a web page instead of an API response for '+url+'. Check the Render service and deployment logs.');
+ }
+ if(!r.ok)throw new Error(data?.error||('Request failed (HTTP '+r.status+'). Please try again.'));
+ return data;
+}
 function showError(target,e){$(target).innerHTML='<div class="empty">'+esc(e.message||'Something went wrong. Please try again.')+'</div>'}
 $('tabs').addEventListener('click',e=>{const b=e.target.closest('[data-panel]');if(!b)return;document.querySelectorAll('.pill').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('.panel').forEach(x=>x.classList.toggle('active',x.id===b.dataset.panel));});
 async function findRes(){const out=$('rout'),q=$('rq').value.trim();if(!q){out.innerHTML='<div class="empty">Type a skill or choose a topic first.</div>';return}out.innerHTML='<div class="empty">Finding matching courses…</div>';try{const p=new URLSearchParams({q,free:$('free').checked?'1':'0',certificate:$('certOnly').checked?'1':'0',level:$('levelFilter').value});const d=await api('/api/resources?'+p);out.innerHTML='<div class="course-count">'+d.length+' matching courses. Certificate details are shown on each card.</div>'+(d.length?d.map(r=>{const cert=/free certif/i.test(r.note||'');return '<article class="resource"><span class="certificate '+(cert?'':'uncertain')+'">'+(cert?'🎓 Free certificate':(/certificate/i.test(r.note||'')?'Check certificate terms':'Free learning'))+'</span><h3><a href="'+esc(r.url)+'" target="_blank" rel="noopener noreferrer">'+esc(r.title)+'</a></h3><div class="meta">'+esc(r.provider)+' · '+esc(r.level)+' · '+esc(r.cost)+'</div><div class="note">'+esc(r.note)+'</div><a class="resource-link" href="'+esc(r.url)+'" target="_blank" rel="noopener noreferrer">Course details ↗</a></article>'}).join(''):'<div class="empty">No matches. Turn off the certificate filter or try a broader topic.</div>')}catch(e){showError('rout',e)}}
