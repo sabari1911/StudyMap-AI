@@ -1,102 +1,97 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>StudyFlow AI</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;600;700&display=swap">
+<meta name="theme-color" content="#eaf1ff">
+<meta name="description" content="StudyFlow AI helps students find free courses, plan studies, practise with an AI tutor and discover internships and nearby learning centres.">
+<title>StudyFlow AI — Learn smarter</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#f2f6fb;--ink:#14213d;--muted:#51607a;--line:#d5deea;--card:#fff;--teal:#0b8a7a;--amber:#f2a33a;--r:10px}
-@media (prefers-color-scheme:dark){:root{--bg:#0e1626;--ink:#e8eef8;--muted:#9fb0c9;--line:#26354f;--card:#162239;--teal:#34c3b0;--amber:#f2a33a}}
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 Lexend,system-ui,sans-serif}
-header{padding:28px 20px 8px;max-width:960px;margin:auto}
-h1{margin:0;font-size:2rem;letter-spacing:-.02em}
-header p{margin:.3rem 0 0;color:var(--muted);max-width:60ch}
-nav{display:flex;gap:6px;flex-wrap:wrap;max-width:960px;margin:16px auto 0;padding:0 20px}
-nav button{border:1px solid var(--line);background:var(--card);color:var(--ink);padding:8px 14px;border-radius:var(--r);font:inherit;cursor:pointer}
-nav button[aria-selected=true]{background:var(--teal);color:#fff;border-color:var(--teal)}
-main{max-width:960px;margin:16px auto 60px;padding:0 20px}
-section{display:none;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:20px}
-section.on{display:block}
-.row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
-input,select,textarea{font:inherit;padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
-textarea{width:100%;min-height:90px}
-.go{background:var(--amber);color:#14213d;border:0;padding:9px 18px;border-radius:8px;font:inherit;font-weight:600;cursor:pointer}
-:focus-visible{outline:3px solid var(--teal);outline-offset:2px}
-.item{border-top:1px solid var(--line);padding:12px 0}
-.item a{color:var(--teal);font-weight:600}
-.tag{font-size:.8rem;color:var(--muted)}
-.empty{color:var(--muted)}
-pre{white-space:pre-wrap;font:inherit;background:var(--bg);padding:14px;border-radius:8px}
-label.t{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-top:1px solid var(--line)}
-progress{width:100%;accent-color:var(--teal)}
+:root{--ink:#182345;--muted:#687493;--line:#dce3f6;--purple:#5145ed;--paper:#f7f8ff;--card:#fff;--shadow:0 12px 35px rgba(52,68,130,.07)}
+*{box-sizing:border-box}body{margin:0;color:var(--ink);font:15px/1.6 'DM Sans',sans-serif;background:linear-gradient(135deg,#d9ddff 0%,#e9f3ff 42%,#d2f2ff 100%);min-height:100vh}
+button,input,select,textarea{font:inherit}button{cursor:pointer}.wrap{max-width:1160px;margin:auto;padding:30px 22px 60px}
+.hero{text-align:center;padding:18px 0 24px}.badge{display:inline-flex;align-items:center;gap:8px;background:#ffffffd9;border:1px solid #fff;border-radius:999px;padding:8px 16px;color:#64708e;font-size:13px;box-shadow:0 4px 18px #5b6cb30c}
+h1{font:800 clamp(29px,4.2vw,43px)/1.2 'Plus Jakarta Sans',sans-serif;letter-spacing:-1.8px;margin:17px 0 12px}.gradient-text{background:linear-gradient(90deg,#5548ed,#168de5);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero p{max-width:700px;margin:0 auto;color:#5d6c8d;font-size:17px;line-height:1.65}.stats{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin-top:23px}.stat{background:#ffffffed;border:1px solid #dfe4f8;border-radius:16px;min-width:135px;padding:12px 20px;box-shadow:var(--shadow)}.stat strong{display:block;color:var(--purple);font:800 23px 'Plus Jakarta Sans',sans-serif}.stat span{font-size:12px;color:#697493}
+.pills{display:flex;justify-content:center;gap:9px;flex-wrap:wrap;margin:9px auto 26px}.pill{border:1px solid #dce2f6;background:#ffffffd9;color:#626e91;border-radius:999px;padding:10px 17px;font-weight:600;transition:.2s}.pill:hover{transform:translateY(-1px);border-color:#b9b5ff}.pill.active{background:var(--purple);color:white;border-color:var(--purple);box-shadow:0 8px 20px #5145ed25}
+.panel{display:none;background:var(--card);border:1px solid #e0e5f5;border-radius:20px;padding:25px;box-shadow:var(--shadow);margin-bottom:18px}.panel.active{display:block}.panel h2{font:700 21px 'Plus Jakarta Sans',sans-serif;letter-spacing:-.5px;margin:0 0 6px}.intro{color:var(--muted);margin:0 0 16px}.form-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.field{background:white;border:1px solid #ccd6f1;border-radius:12px;padding:12px 14px;color:var(--ink);min-width:0;flex:1;outline:none}.field:focus{border-color:#8e86ff;box-shadow:0 0 0 3px #5145ed12}.select{min-width:185px}.check{display:flex;align-items:center;gap:7px;white-space:nowrap;color:#4d5a79;font-weight:600}.btn{border:0;border-radius:11px;padding:12px 18px;background:#ffb13f;color:#1d2a49;font-weight:800;box-shadow:0 5px 12px #f5a72c21}.btn:hover{filter:brightness(.98);transform:translateY(-1px)}.btn-purple{background:var(--purple);color:white}.btn-soft{background:#f0efff;color:var(--purple);box-shadow:none}
+.results{margin-top:16px}.resource{padding:15px 0;border-top:1px solid #e8ebf6}.resource:first-child{margin-top:3px}.resource a{color:#168eab;font-weight:700;text-decoration:none}.resource a:hover{text-decoration:underline}.meta{font-size:12px;color:#71809f;margin:3px 0}.note{color:#4e5b79;font-size:13px}.empty{padding:14px;border-radius:12px;background:#f7f8ff;color:#6b7692}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:17px}.mini-card{border:1px solid #e4e8f6;border-radius:14px;padding:16px;background:#fff}.mini-card h3{font-size:15px;margin:0 0 7px}.mini-card p{font-size:13px;color:var(--muted);margin:0 0 12px}.mini-card a{color:#5145ed;font-size:13px;font-weight:700;text-decoration:none}.output{margin-top:16px;background:#f7f8ff;border:1px solid #e8eafb;border-radius:12px;padding:16px;white-space:pre-wrap}.task{display:flex;gap:10px;padding:12px 0;border-top:1px solid #e8ebf6}.task input{margin-top:5px}.task span{color:#4c5978}.foot{text-align:center;color:#8290ac;font-size:12px;padding:12px}
+@media(max-width:650px){.wrap{padding:20px 13px 35px}.hero{padding-top:8px}h1{letter-spacing:-1px}.hero p{font-size:15px}.panel{padding:18px;border-radius:16px}.form-row>*{width:100%}.check{width:auto}.btn{width:100%}.stat{min-width:calc(33.3% - 10px);padding:10px 9px}.stat strong{font-size:20px}.stat span{font-size:11px}.pill{padding:9px 12px;font-size:13px}}
 </style>
 </head>
 <body>
-<header>
-  <h1>StudyFlow AI</h1>
-  <p>Find free courses, plan your study days, ask a tutor in Tamil or English, and see where to go next.</p>
+<div class="wrap">
+<header class="hero">
+  <div class="badge">✨ Free-first · Tamil &amp; English · Built for students</div>
+  <h1>Learn smarter with <span class="gradient-text">StudyFlow AI</span></h1>
+  <p>Find free courses with certificates, build a study plan, practise with quizzes, and find internships and learning centres near you.</p>
+  <div class="stats">
+    <div class="stat"><strong>110+</strong><span>curated resources</span></div>
+    <div class="stat"><strong>8</strong><span>career roadmaps</span></div>
+    <div class="stat"><strong>₹0</strong><span>to get started</span></div>
+  </div>
 </header>
-<nav role="tablist" id="tabs"></nav>
+<nav class="pills" id="tabs" aria-label="StudyFlow features">
+  <button class="pill" data-panel="notes">📝 Notes &amp; quiz</button>
+  <button class="pill" data-panel="internships">💼 Internships</button>
+  <button class="pill active" data-panel="nearby">📍 Nearby</button>
+  <button class="pill" data-panel="roadmap">🎯 Career roadmap</button>
+  <button class="pill" data-panel="courses">📚 Free courses</button>
+  <button class="pill" data-panel="planner">🗓️ Study planner</button>
+  <button class="pill" data-panel="tutor">🤖 AI tutor</button>
+</nav>
 <main>
- <section id="resources"><div class="row">
-   <input id="rq" placeholder="Topic, e.g. python" aria-label="Topic">
-   <label><input type="checkbox" id="free" checked> Free only</label>
-   <button class="go" onclick="findRes()">Find resources</button></div><div id="rout"></div></section>
- <section id="planner"><div class="row">
-   <input id="ptopic" value="Python" aria-label="Topic">
-   <input id="pdays" type="number" value="30" min="1" max="180" aria-label="Days">
-   <input id="phours" type="number" value="2" min="0.5" max="12" step="0.5" aria-label="Hours per day">
-   <button class="go" onclick="makePlan()">Create plan</button></div>
-   <progress id="prog" value="0" max="1" hidden></progress><div id="pout"><p class="empty">Enter a topic and days to create a plan. Tick tasks as you finish them.</p></div></section>
- <section id="tutor"><div class="row">
-   <select id="lang" aria-label="Language"><option>English</option><option>Tamil</option><option>Hindi</option><option>Telugu</option><option>Malayalam</option></select></div>
-   <textarea id="q" placeholder="Explain Python inheritance with a simple example"></textarea>
-   <div class="row" style="margin-top:10px"><button class="go" onclick="ask()">Ask</button></div><pre id="aout" hidden></pre></section>
- <section id="internships"><div class="row">
-   <input id="dom" value="python" aria-label="Domain"><button class="go" onclick="interns()">Find internships</button></div><div id="iout"></div></section>
- <section id="nearby"><div class="row">
-   <input id="loc" placeholder="Your town or city" aria-label="Location">
-   <select id="kind" aria-label="Type"><option value="library">Library</option><option value="computer training institute">Computer training</option><option value="coding institute">Coding institute</option><option value="community learning centre">Community centre</option></select>
-   <button class="go" onclick="near()">Search map</button></div><div id="nout"></div></section>
- <section id="roadmap"><div class="row">
-   <select id="goal" aria-label="Career goal"></select><button class="go" onclick="road()">Show roadmap</button></div><div id="rmout"></div></section>
+<section class="panel" id="courses">
+ <h2>Find your next course</h2><p class="intro">Search learning resources by skill or provider. Check certificate and audit terms on the provider's official page.</p>
+ <div class="form-row"><input class="field" id="rq" placeholder="Search Python, AI, data science..." aria-label="Search courses"><label class="check"><input type="checkbox" id="free" checked> Free only</label><button class="btn" id="findRes">Find resources</button></div><div class="results" id="rout"></div>
+</section>
+<section class="panel" id="planner">
+ <h2>Build your study plan</h2><p class="intro">Turn a learning goal into small, manageable steps.</p>
+ <div class="form-row"><input class="field" id="ptopic" value="Python" placeholder="What do you want to learn?"><input class="field" id="pdays" type="number" value="30" min="1" max="180" aria-label="Number of days"><input class="field" id="phours" type="number" value="2" min=".5" max="12" step=".5" aria-label="Hours per day"><button class="btn" id="makePlan">Create plan</button></div><div class="results" id="pout"></div>
+</section>
+<section class="panel" id="tutor">
+ <h2>Your AI study tutor</h2><p class="intro">Ask a question and get a simple explanation in your preferred language.</p>
+ <div class="form-row"><select class="field select" id="lang" aria-label="Language"><option>English</option><option>Tamil</option><option>Hindi</option><option>Telugu</option><option>Malayalam</option></select></div>
+ <textarea class="field" id="question" style="width:100%;min-height:120px;margin-top:12px" placeholder="Example: Explain Python inheritance with a simple example"></textarea><div class="form-row" style="margin-top:10px"><button class="btn btn-purple" id="ask">Ask StudyFlow AI</button></div><div class="output" id="aout" hidden></div>
+</section>
+<section class="panel" id="internships">
+ <h2>Internships &amp; opportunities</h2><p class="intro">Explore student-friendly portals. Confirm eligibility, deadlines and fees on official websites.</p>
+ <div class="form-row"><input class="field" id="domain" value="AI and Data Science" placeholder="Skill or domain"><button class="btn" id="findInterns">Find opportunities</button></div><div class="grid" id="iout"></div>
+</section>
+<section class="panel active" id="nearby">
+ <h2>Learning places near you</h2><p class="intro">See libraries, coaching and training centres, and colleges on a map, with distance and directions.</p>
+ <div class="form-row"><input class="field" id="loc" value="Madurai" placeholder="Your town or city" aria-label="Location"><select class="field select" id="kind" aria-label="Type of learning place"><option value="training / coaching">Training / coaching</option><option value="library">Library</option><option value="computer training institute">Computer training</option><option value="coding institute">Coding institute</option><option value="college">College</option><option value="community learning centre">Community learning centre</option></select><select class="field select" id="distance" aria-label="Search radius"><option value="10">Within 10 km</option><option value="5">Within 5 km</option><option value="25">Within 25 km</option></select><button class="btn btn-purple" id="findNearby">Find learning places</button></div><div class="results" id="nout"></div>
+</section>
+<section class="panel" id="roadmap">
+ <h2>Your career roadmap</h2><p class="intro">Choose a career goal to see a practical learning path.</p><div class="form-row"><select class="field" id="goal" aria-label="Career goal"></select><button class="btn" id="showRoad">Show roadmap</button></div><div class="results" id="rmout"></div>
+</section>
+<section class="panel" id="notes">
+ <h2>Quick notes &amp; practice quiz</h2><p class="intro">Save your own notes in this browser and practise with a quick self-check.</p><textarea class="field" id="notesText" style="width:100%;min-height:110px" placeholder="Write your topic notes here..."></textarea><div class="form-row" style="margin-top:10px"><button class="btn btn-purple" id="saveNotes">Save notes</button><button class="btn btn-soft" id="quizBtn">Quick quiz: Python basics</button></div><div class="output" id="notesOut" hidden></div>
+</section>
 </main>
+<div class="foot">StudyFlow AI · Learn at your pace · Always verify course and internship details with the official provider.</div>
+</div>
 <script>
-const $=id=>document.getElementById(id), API=location.origin.startsWith("http")?"":"http://localhost:5000";
-const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-const tabs=[["resources","Free courses"],["planner","Study planner"],["tutor","AI tutor"],["internships","Internships"],["nearby","Nearby"],["roadmap","Career roadmap"]];
-$("tabs").innerHTML=tabs.map(([id,l],i)=>`<button role="tab" aria-selected="${i==0}" data-t="${id}">${l}</button>`).join("");
-$("tabs").onclick=e=>{const t=e.target.dataset.t;if(!t)return;
- document.querySelectorAll("nav button").forEach(b=>b.setAttribute("aria-selected",b.dataset.t==t));
- document.querySelectorAll("section").forEach(s=>s.classList.toggle("on",s.id==t))};
-$("resources").classList.add("on");
-const j=async(u,o)=>{const r=await fetch(API+u,o);return r.json()};
-async function findRes(){const d=await j(`/api/resources?q=${encodeURIComponent($("rq").value)}&free=${$("free").checked?1:0}`);
- $("rout").innerHTML=d.length?d.map(r=>`<div class="item"><a href="${esc(r.url)}" target="_blank" rel="noopener">${esc(r.title)}</a>
- <div class="tag">${esc(r.provider)} · ${esc(r.level)} · ${esc(r.cost)}</div><div>${esc(r.note)}</div></div>`).join(""):'<p class="empty">No match. Try "python", "machine learning" or "web development".</p>'}
-async function makePlan(){const d=await j("/api/plan",{method:"POST",headers:{"Content-Type":"application/json"},
- body:JSON.stringify({topic:$("ptopic").value,days:+$("pdays").value,hours_per_day:+$("phours").value})});
- const key="sf:"+d.topic.toLowerCase()+d.total_days, done=JSON.parse(localStorage.getItem(key)||"[]");
- $("pout").innerHTML=`<p>${esc(d.topic)} · ${d.total_days} days · ${d.hours_per_day} h/day</p>`+d.phases.map((p,i)=>
- `<label class="t"><input type="checkbox" data-i="${i}" ${done.includes(i)?"checked":""}><span><b>Days ${p.days}</b><br>${esc(p.goal)}</span></label>`).join("");
- const pr=$("prog");pr.hidden=false;pr.max=d.phases.length;
- const upd=()=>{const c=[...document.querySelectorAll("#pout input")].filter(x=>x.checked).map(x=>+x.dataset.i);
-  localStorage.setItem(key,JSON.stringify(c));pr.value=c.length};
- $("pout").onchange=upd;upd()}
-async function ask(){const o=$("aout");o.hidden=false;o.textContent="Thinking…";
- const d=await j("/api/ask",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({question:$("q").value,language:$("lang").value})});
- o.textContent=d.answer||d.error}
-async function interns(){const d=await j("/api/internships?domain="+encodeURIComponent($("dom").value));
- $("iout").innerHTML=d.map(x=>`<div class="item"><a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.name)}</a></div>`).join("")+
- '<p class="tag">Check eligibility and deadlines on the official page before applying.</p>'}
-async function near(){const d=await j(`/api/nearby?location=${encodeURIComponent($("loc").value)}&kind=${encodeURIComponent($("kind").value)}`);
- $("nout").innerHTML=d.error?`<p class="empty">${esc(d.error)}</p>`:`<div class="item"><a href="${esc(d.osm)}" target="_blank" rel="noopener">Open in OpenStreetMap</a></div><div class="item"><a href="${esc(d.google)}" target="_blank" rel="noopener">Open in Google Maps</a></div>`}
-async function road(){const d=await j("/api/roadmap?goal="+encodeURIComponent($("goal").value));
- $("rmout").innerHTML=d.steps?"<ol>"+d.steps.map(s=>`<li>${esc(s)}</li>`).join("")+"</ol>":'<p class="empty">No roadmap yet for that goal.</p>'}
-j("/api/roadmap").then(d=>{$("goal").innerHTML=d.available.map(g=>`<option>${esc(g)}</option>`).join("")});
-findRes();
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+async function api(url,options){const r=await fetch(url,options);const data=await r.json();if(!r.ok)throw new Error(data.error||'Request failed. Please try again.');return data}
+function showError(target,e){$(target).innerHTML='<div class="empty">'+esc(e.message||'Something went wrong. Please try again.')+'</div>'}
+$('tabs').addEventListener('click',e=>{const b=e.target.closest('[data-panel]');if(!b)return;document.querySelectorAll('.pill').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('.panel').forEach(x=>x.classList.toggle('active',x.id===b.dataset.panel));});
+async function findRes(){const out=$('rout');out.innerHTML='<div class="empty">Searching resources…</div>';try{const d=await api('/api/resources?q='+encodeURIComponent($('rq').value)+'&free='+($('free').checked?'1':'0'));out.innerHTML=d.length?d.map(r=>'<article class="resource"><a href="'+esc(r.url)+'" target="_blank" rel="noopener noreferrer">'+esc(r.title)+'</a><div class="meta">'+esc(r.provider)+' · '+esc(r.level)+' · '+esc(r.cost)+'</div><div class="note">'+esc(r.note)+'</div></article>').join(''):'<div class="empty">No exact match. Try Python, machine learning, data science or web development.</div>'}catch(e){showError('rout',e)}}
+$('findRes').onclick=findRes;
+async function makePlan(){const out=$('pout');out.innerHTML='<div class="empty">Creating your plan…</div>';try{const d=await api('/api/plan',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({topic:$('ptopic').value,days:+$('pdays').value,hours_per_day:+$('phours').value})});const key='sf-plan-'+d.topic.toLowerCase()+'-'+d.total_days;let done=[];try{done=JSON.parse(localStorage.getItem(key)||'[]')}catch{}out.innerHTML='<p class="intro">'+esc(d.topic)+' · '+d.total_days+' days · '+d.hours_per_day+' hours per day. Tick each step when complete.</p>'+d.phases.map((p,i)=>'<label class="task"><input type="checkbox" data-i="'+i+'" '+(done.includes(i)?'checked':'')+'><span><b>Days '+esc(p.days)+'</b><br>'+esc(p.goal)+'</span></label>').join('');out.onchange=()=>{const selected=[...out.querySelectorAll('input:checked')].map(x=>+x.dataset.i);localStorage.setItem(key,JSON.stringify(selected))}}catch(e){showError('pout',e)}}
+$('makePlan').onclick=makePlan;
+$('ask').onclick=async()=>{const out=$('aout');out.hidden=false;out.textContent='Thinking…';try{const d=await api('/api/ask',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:$('question').value,language:$('lang').value})});out.textContent=d.answer||d.error||'No answer returned.'}catch(e){out.textContent=e.message}};
+$('findInterns').onclick=async()=>{const out=$('iout');out.innerHTML='<div class="empty">Finding opportunity portals…</div>';try{const d=await api('/api/internships?domain='+encodeURIComponent($('domain').value));out.innerHTML=d.map(x=>'<article class="mini-card"><h3>'+esc(x.name)+'</h3><p>Search current opportunities and check eligibility on the provider site.</p><a href="'+esc(x.url)+'" target="_blank" rel="noopener noreferrer">Explore opportunities ↗</a></article>').join('')}catch(e){showError('iout',e)}};
+$('findNearby').onclick=()=>{const loc=$('loc').value.trim(),kind=$('kind').value;if(!loc){$('nout').innerHTML='<div class="empty">Enter a town or city first.</div>';return}const q=encodeURIComponent(kind+' near '+loc+' within '+$('distance').value+' km');$('nout').innerHTML='<div class="grid"><article class="mini-card"><h3>OpenStreetMap</h3><p>Explore nearby learning places on an open map.</p><a target="_blank" rel="noopener" href="https://www.openstreetmap.org/search?query='+q+'">View map ↗</a></article><article class="mini-card"><h3>Google Maps</h3><p>See places, directions and current reviews.</p><a target="_blank" rel="noopener" href="https://www.google.com/maps/search/'+q+'">Find directions ↗</a></article></div>'};
+async function loadRoadmaps(){try{const d=await api('/api/roadmap');$('goal').innerHTML=(d.available||[]).map(g=>'<option value="'+esc(g)+'">'+esc(g.replace(/\b\w/g,c=>c.toUpperCase()))+'</option>').join('');if(!d.available?.length)$('rmout').innerHTML='<div class="empty">No roadmaps are available yet.</div>'}catch(e){showError('rmout',e)}}
+$('showRoad').onclick=async()=>{try{const d=await api('/api/roadmap?goal='+encodeURIComponent($('goal').value));$('rmout').innerHTML=d.steps?.length?'<ol>'+d.steps.map(s=>'<li style="padding:7px 0">'+esc(s)+'</li>').join('')+'</ol>':'<div class="empty">No roadmap found for this goal yet.</div>'}catch(e){showError('rmout',e)}};
+$('saveNotes').onclick=()=>{localStorage.setItem('studyflow-notes',$('notesText').value);$('notesOut').hidden=false;$('notesOut').textContent='Your notes are saved in this browser.'};
+$('notesText').value=localStorage.getItem('studyflow-notes')||'';
+$('quizBtn').onclick=()=>{const out=$('notesOut');out.hidden=false;out.innerHTML='';out.textContent='Quick quiz — Python basics\n1. Which keyword defines a function in Python? (Answer: def)\n2. Which data type stores True or False? (Answer: bool)\n3. What does len([1, 2, 3]) return? (Answer: 3)';};
+loadRoadmaps();findRes();
 </script>
 </body>
 </html>
