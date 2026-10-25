@@ -204,10 +204,9 @@ def ask():
     language = d.get("language", "English")
     if not question:
         return jsonify({"error": "Ask a question first."}), 400
-    key = os.getenv("ANTHROPIC_API_KEY")
-    if not key:
-        topic = question[:100]
-        return jsonify({"answer": "The AI tutor connection is not configured yet, so here is a quick study fallback.\n\nQuestion: " + topic + "\n\nTry this learning method:\n1. Write down the key terms in your own words.\n2. Follow one beginner lesson from the course links.\n3. Practise with a small example and check the result.\n4. Ask a more specific question, such as “Explain Python loops with an example”.\n\nTo enable full AI answers, add your own ANTHROPIC_API_KEY as a secret environment variable in Render. Never put the key in frontend code or commit it to GitHub."})
+    key = (os.getenv("ANTHROPIC_API_KEY") or "").strip()
+    if not key or key in {"your-key-here", "replace-me", "YOUR_ANTHROPIC_API_KEY"}:
+        return jsonify({"error": "AI tutor is not configured. In Render, open your service → Environment, add a valid ANTHROPIC_API_KEY from the official Anthropic Console, save, and redeploy. Never paste the key into chat or GitHub."}), 503
     try:
         import anthropic
         client = anthropic.Anthropic(api_key=key)
@@ -216,7 +215,10 @@ def ask():
             messages=[{"role": "user", "content": f"Answer in {language}.\n\n{question}"}])
         return jsonify({"answer": "".join(b.text for b in msg.content if b.type == "text")})
     except Exception as e:
-        return jsonify({"error": "AI request failed: " + re.sub(r"sk-[A-Za-z0-9_-]+", "***", str(e))}), 502
+        message = str(e).lower()
+        if "authentication_error" in message or "invalid bearer token" in message or "invalid x-api-key" in message or "401" in message:
+            return jsonify({"error": "Anthropic rejected the API key. In Render → Environment, replace ANTHROPIC_API_KEY with a newly created, valid key from the official Anthropic Console, save, and redeploy. Do not share the key publicly."}), 502
+        return jsonify({"error": "AI tutor request failed. Check the Anthropic API key, account access, model availability and API billing, then try again."}), 502
 
 
 if __name__ == "__main__":
