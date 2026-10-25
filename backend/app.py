@@ -1,8 +1,10 @@
 """StudyFlow AI backend (Flask). Run: python backend/app.py"""
-import json, os, re
+import json, os, re, sqlite3, secrets
+from datetime import timedelta
 from urllib.parse import quote_plus
 from pathlib import Path
-from flask import Flask, jsonify, request, send_from_directory
+from werkzeug.security import generate_password_hash, check_password_hash
+from flask import Flask, jsonify, request, send_from_directory, session
 from flask_cors import CORS
 from dotenv import load_dotenv
 
@@ -10,7 +12,20 @@ load_dotenv()
 ROOT = Path(__file__).resolve().parent.parent
 DATA = Path(__file__).parent / "data"
 app = Flask(__name__, static_folder=str(ROOT / "frontend"), static_url_path="")
-CORS(app)
+app.secret_key = os.getenv("FLASK_SECRET_KEY") or secrets.token_hex(32)
+app.config.update(SESSION_COOKIE_HTTPONLY=True, SESSION_COOKIE_SAMESITE="Lax", SESSION_COOKIE_SECURE=bool(os.getenv("RENDER")), PERMANENT_SESSION_LIFETIME=timedelta(days=7))
+CORS(app, supports_credentials=True)
+DB_PATH = Path(os.getenv("STUDYFLOW_DB_PATH", str(DATA / "studyflow_users.db")))
+
+def get_db():
+    DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    conn.execute("CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, email TEXT NOT NULL UNIQUE COLLATE NOCASE, password_hash TEXT NOT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)")
+    return conn
+
+with get_db() as _db:
+    pass
 
 RESOURCES = json.loads((DATA / "resources.json").read_text(encoding="utf-8"))
 ROADMAPS = json.loads((DATA / "roadmaps.json").read_text(encoding="utf-8"))
@@ -32,6 +47,60 @@ SYSTEM_PROMPT = (
 @app.get("/")
 def index():
     return send_from_directory(app.static_folder, "index.html")
+
+
+@app.post("/api/auth/register")
+def register():
+    d = request.get_json(silent=True) or {}
+    name = (d.get("name") or "").strip()[:80]
+    email = (d.get("email") or "").strip().lower()[:254]
+    password = d.get("password") or ""
+    if len(name) < 2:
+        return jsonify({"error": "Please enter your name (at least 2 characters)."}), 400
+    if not re.fullmatch(r"[^\s@]+@[^\s@]+\.[^\s@]+", email):
+        return jsonify({"error": "Enter a valid email address."}), 400
+    if len(password) < 8:
+        return jsonify({"error": "Password must contain at least 8 characters."}), 400
+    try:
+        with get_db() as db:
+            cur = db.execute("INSERT INTO users (name, email, password_hash) VALUES (?, ?, ?)", (name, email, generate_password_hash(password)))
+            user_id = cur.lastrowid
+    except sqlite3.IntegrityError:
+        return jsonify({"error": "An account with this email already exists. Please sign in."}), 409
+    session.clear()
+    session["user_id"] = user_id
+    session["user_name"] = name
+    session.permanent = True
+    return jsonify({"user": {"id": user_id, "name": name, "email": email}}), 201
+
+
+@app.post("/api/auth/login")
+def login():
+    d = request.get_json(silent=True) or {}
+    email = (d.get("email") or "").strip().lower()[:254]
+    password = d.get("password") or ""
+    with get_db() as db:
+        user = db.execute("SELECT id, name, email, password_hash FROM users WHERE email = ?", (email,)).fetchone()
+    if not user or not check_password_hash(user["password_hash"], password):
+        return jsonify({"error": "Email or password is incorrect."}), 401
+    session.clear()
+    session["user_id"] = user["id"]
+    session["user_name"] = user["name"]
+    session.permanent = True
+    return jsonify({"user": {"id": user["id"], "name": user["name"], "email": user["email"]}})
+
+
+@app.get("/api/auth/me")
+def auth_me():
+    if not session.get("user_id"):
+        return jsonify({"user": None})
+    return jsonify({"user": {"id": session["user_id"], "name": session.get("user_name", "Student")}})
+
+
+@app.post("/api/auth/logout")
+def logout():
+    session.clear()
+    return jsonify({"ok": True})
 
 
 @app.get("/api/resources")
@@ -117,4 +186,4 @@ def ask():
 
 
 if __name__ == "__main__":
-    app.run(debug=True, port=5000)
+    app.run(debug=os.getenv("FLASK_DEBUG") == "1", port=5000)
